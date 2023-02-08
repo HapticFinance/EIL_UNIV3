@@ -1,0 +1,233 @@
+---
+title: "Haptic"
+date: \today
+abstract: ""
+output: 
+  pdf_document:
+      toc: true
+      number_sections: true
+      toc_depth: 2
+      keep_md: true
+      keep_tex: true
+      template: NULL
+      #pandoc_args: [
+      #  --template=extras/haptic_template.tex
+      #]
+html_document: default
+tables: yes
+geometry: margin=35mm
+latex_engine: pdflatex
+header-includes:
+    - \usepackage{float}
+    - \usepackage{pdfpages}
+    - \usepackage{tabu}
+    - \usepackage{lipsum}
+    - \usepackage{booktabs}
+    - \usepackage[justification=raggedright,labelfont=bf,singlelinecheck=false]{caption}
+    - \usepackage{array}
+    - \usepackage{xcolor} 
+    - \usepackage{color, colortbl}
+    - \usepackage{amsmath}
+    - \usepackage{mathtools,mathptmx}
+    - \usepackage{tabularx}
+    - \usepackage{background}
+    - \usepackage[english]{babel}
+    - \usepackage{csquotes}                
+    - \usepackage[style=alphabetic, backend=bibtex]{biblatex}
+    - \bibliography{bibliography/haptic.bib}
+    - \usepackage{tikz}
+    - \usepackage[font=large,labelfont=bf]{caption}
+    - \usetikzlibrary{shapes,positioning}
+    - \usepackage{wrapfig}
+    - \usepackage{eso-pic,graphicx,transparent}
+    - \DeclareUnicodeCharacter{2212}{-}
+    - \backgroundsetup{pages={some},contents={}, opacity={0.3}, color={gray}}
+    - \usepackage{multirow}
+    - \usepackage{caption}
+    - \newcommand{\Tau}{\textstyle{\mathcal{T}}}
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "pdf") })
+---
+\captionsetup{font=small}
+\captionsetup[table]{labelformat=empty}
+\captionsetup[table]{labelfont=bf}
+```{r results="asis", warning=FALSE, echo=FALSE}
+options(knitr.kable.NA = '') 
+options(scipen=999) # avoid scientific notation
+
+path = getwd()
+source(paste(path, "/sim.r", sep=""))
+
+t = 168
+p = 1000
+a = 999
+b = 1001
+x = 2
+y = x * p
+mu = 0.000075
+sigma = 0.001
+
+in_range <- (a <= p && b >= p)
+
+if (a > p && !in_range) {
+  # single asset liquidity
+  y = 0
+} else if (a < p && !in_range) {
+  # single asset liquidity
+  x = 0
+} else if (in_range) {
+  # dual asset liquidity
+  sp = p ** 0.5
+  sa = a ** 0.5
+  sb = b ** 0.5
+  L = get_liquidity_0(x, sp, sb)
+  y = calculate_y(L, sp, sa, sb)
+} 
+
+values <- run_sim(p, a, b, x, y, t, mu, sigma)
+rangeFactor <- sqrt(b / a)
+
+IL_v <- values[[1]]
+priceChanges <- values[[2]]
+IV_vector <-  values[[3]]
+price_vector <-  values[[4]]
+intervals_in_range <- values[[5]]
+cum_premium <- values[[6]]
+lvr_vector <- values[[7]]
+daily_volatility_vector <- values[[8]]
+real_volume_vector <- values[[9]]
+S <- values[[10]]
+time_itm <- values[[11]]
+
+mat_eil_mu_one <- run_calc(168) 
+
+mat_eil_mu_one_long <- run_calc(720) 
+
+```
+
+\newpage
+
+\subsection{Simulation results} 
+\label{simres}
+
+```{r, echo=FALSE, warning=FALSE, results='asis'}
+
+collapse_rows_dt <- data.frame(
+    C1 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 1],
+    C2 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 2],
+    C3 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 3],
+    C4 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 4],
+    C5 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 5],
+    C6 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 6],
+    C7 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 7],
+    C8 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 8],
+    C9 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 9],
+    C10 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 10]
+)
+
+
+
+sigmaMsg <- paste("$\\\\sigma = $ ", sigma, sep="")
+sigmaMsg2 <- paste("$\\\\sigma = $ ", 0.002, sep="")
+
+collapse_rows_dt %>%
+kbl(booktabs = T, 
+    align = "c", 
+    longtable = T, 
+    escape = FALSE, 
+    col.names = c( "$\\mu$", "r", "$\\Tau$", "EIL", "EFX", "EFY", "$\\Tau$", "EIL", "EFX", "EFY"),
+    caption = "Table 1: Results for setting $\\mu$ = 7.5e−5, 1.5e−4 and $\\sigma$ = 0.001 and $\\sigma$ = 0.002 for a week (T = 168 hours) of providing liquidity with initial price \\$1000."
+    ) %>%  kable_styling(font_size = 8) %>%
+    column_spec(1, bold=F) %>%
+        collapse_rows(columns = 1, latex_hline = "major", valign = "middle")  %>%
+            add_header_above(c(" ", " ", "Formula" = 4, "Formula" = 4), escape = FALSE)  %>%
+                add_header_above(escape =FALSE, c(" ", setNames(5,sigmaMsg), setNames(4,sigmaMsg2)))   %>%
+                    kable_styling(font_size = 8, latex_options = c("hold_position", "repeat_header")) %>%
+                        print()
+
+collapse_rows_dt <- data.frame(
+    C1 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 1],
+    C2 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 2],
+    C3 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 3],
+    C4 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 4],
+    C5 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 5],
+    C6 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 6],
+    C7 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 7],
+    C8 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 8],
+    C9 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 9],
+    C10 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 10]
+)
+
+
+
+sigmaMsg <- paste("$\\\\sigma = $ ", sigma, sep="")
+sigmaMsg2 <- paste("$\\\\sigma = $ ", 0.002, sep="")
+
+collapse_rows_dt %>%
+kbl(booktabs = T, 
+    align = "c", 
+    longtable = T, 
+    escape = FALSE, 
+    col.names = c( "$\\mu$", "r", "$\\Tau$", "EIL", "EFX", "EFY", "$\\Tau$", "EIL", "EFX", "EFY"),
+    caption = "Table 2: Results for setting $\\mu$ = 7.5e−5, 1.5e−4 and $\\sigma$ = 0.001 and $\\sigma$ = 0.002 for 30 days (T = 720 hours) of providing liquidity with initial price \\$1000."
+    ) %>%  kable_styling(font_size = 8) %>%
+    column_spec(1, bold=F) %>%
+        collapse_rows(columns = 1, latex_hline = "major", valign = "middle")  %>%
+            add_header_above(c(" ", " ", "Formula" = 4, "Formula" = 4), escape = FALSE)  %>%
+                add_header_above(escape =FALSE, c(" ", setNames(5,sigmaMsg), setNames(4,sigmaMsg2)))   %>%
+                    kable_styling(font_size = 8, latex_options = c("hold_position", "repeat_header")) %>%
+                        print()
+
+```
+
+\section{Plots} 
+\label{plots}
+
+\subsection{Stock price and impermanent loss}
+
+```{r, echo=FALSE, warning=FALSE, results='asis', out.height = '50%'}
+
+# Plot the stock price 
+par(mfrow = c(2, 1))
+
+p1 <- ggplot(data.frame(time = 1:nrow(S), value = S[, 1]), aes(x = time, y = value)) +
+  geom_line() +
+  labs(x = "Time", y = "Value") +
+  ggtitle("Price path")
+  labs(x = "",
+    y = "%") +
+  theme_minimal() +
+  theme(legend.position="bottom", axis.title=element_text(size=12,face="bold"), 
+  axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+IL_v <- IL_v[-1]
+
+p2 <- ggplot(data.frame(1:length(IL_v), IL_v), aes(x=1:length(IL_v), y=IL_v)) + 
+  geom_line(color="red") + 
+  labs(x="", y="%")+ 
+  ggtitle(glue::glue("Impermanent loss")) +
+  labs(x = "",
+    y = "%") +
+  theme_minimal() +
+  theme(legend.position="bottom", axis.title=element_text(size=12,face="bold"), 
+  axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()
+)
+
+p1 / p2
+
+# Convert the matrix to a data frame
+df <- data.frame(time = rep(1:nrow(S), ncol(S)),
+                 value = as.vector(S),
+                 path = rep(1:ncol(S), each = nrow(S)))
+
+# Plot all the paths
+p3 <- ggplot(df, aes(x = time, y = value, color = as.factor(path))) +
+  geom_line() +
+  labs(x = "Time", y = "Value") +
+  ggtitle("GBM price paths") + 
+  theme(legend.position = "none")
+
+p3
+```
