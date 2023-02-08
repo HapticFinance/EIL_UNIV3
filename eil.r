@@ -79,7 +79,7 @@ calc_time_ITM_integrals <- function(P, Pa, Pb, mu, sigma, t) {
     upper_bound <- log(Pb / P)
 
     InnerFunc = function(x, mu, sigma, t) { 
-        second_term <- ((x - (mu - ((sigma^2) / 2) * t))^2) / (2 * t * (sigma^2))
+        second_term <- (x - (mu - (sigma^2/2)) * t)^2 / (2 * t * (sigma^2))
         exponentiated <- exp(-second_term) 
         res <- exponentiated / sqrt(t)
     }
@@ -241,13 +241,17 @@ run_calc <- function(mu, t) {
         prmatrix(first_chunk)
         prmatrix(second_chunk)
 
+        combined <- rbind(first_chunk, second_chunk)
+
+        prmatrix(combined)
+
+        return(combined)
     }, error = function(e) {
+
         if (length(e) > 1) {
             print(e)
             return(NA)
         }
+
     })
 }
-
-run_calc(0.000075, 168)
-# run_calc()
