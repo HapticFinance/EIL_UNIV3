@@ -107,7 +107,7 @@ calc_time_ITM_integrals <- function(P, Pa, Pb, mu, sigma, t) {
 }
 
 calc_eil <- function(P, Pa, Pb, mu, sigma, t) {
-    print(glue::glue("mu is {mu} and sigma is {sigma} and t is {t}"))
+
     integral_below_pa <- calc_eil_integrals(psi_below_pa, P, Pa, Pb, mu, sigma, t)
     integral_in_range <- calc_eil_integrals(psi_in_range, P, Pa, Pb, mu, sigma, t)
     integral_above_pb <- calc_eil_integrals(psi_above_pb, P, Pa, Pb, mu, sigma, t)
@@ -138,7 +138,7 @@ calc_alpha <- function(mu, sigma, dt) {
     second_term <- (erf(((sigma^2 - mu) * sqrt(dt)) / sqrt(2) * sigma) + 1) 
     third_term <- -(1 / 2) * erfc(((mu - (sigma^2 / 2)) * sqrt(dt)) / (sqrt(2) * sigma))
     res <- first_term * second_term - third_term
-    # res <- exp(first_term * second_term - third_term)
+
     return(res)
 }
 
@@ -155,242 +155,88 @@ calc_beta <- function(mu, sigma, dt) {
 calc_capital_efficiency_simplified <- function(r) {
 
     CE <- round(sqrt(r) / (sqrt(r) - 1))
-    # print(glue::glue("CE = {CE}"))
+
     return(CE)
 }
 
 
-calc_chunk <- function(mu, t) {
+compute_row_data <- function( V, P, Pa, Pb, mu, sigma, t) {
+    EIL <- calc_eil(P, Pa, Pb, mu, sigma, t)
+    time_ITM <- calc_time_ITM_integrals(P, Pa, Pb, mu, sigma, t)
+    alpha <- calc_alpha(mu, sigma, time_ITM)
+    fees_x <- calc_expected_total_fees_x(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, alpha)
+    beta <- calc_beta(mu, sigma, time_ITM)
+    fees_y <- calc_expected_total_fees_y(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, beta)
+    return(list(EIL, time_ITM, fees_x,  fees_y))
+}
+
+calc_chunk <- function(ranges_list, mu, t) {
 
         mat_res <- matrix(ncol = 10, nrow = 6) 
+        
+        EIL_THRESHOLD <- 0.0001
 
         V <- 5000
         P <- 1000
-        Pa <- 999
-        Pb <- 1001
-        range_factor <- sqrt(Pb / Pa)
-        THRESHOLD <- 0.0001
-        sigma <- 0.0001
- 
-        EIL <- calc_eil(P, Pa, Pb, mu, sigma, t)
-        time_ITM <- calc_time_ITM_integrals(P, Pa, Pb, mu, sigma, t)
-        alpha <- calc_alpha(mu, sigma, time_ITM)
-        fees_x <- calc_expected_total_fees_x(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, alpha)
-        beta <- calc_beta(mu, sigma, time_ITM)
-        fees_y <- calc_expected_total_fees_y(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, beta)
- 
-    
-        mat_res[1, 1] <- formatC(mu, format = "e", digits = 2)
-        mat_res[1, 2] <- formatC(range_factor, digits = 3, format = "f")
-        mat_res[1, 3] <- formatC(time_ITM, digits = 2, format = "f")
-        mat_res[1, 4] <- ifelse((-1 * EIL) < THRESHOLD, formatC(EIL, format = "e", digits = 2) , formatC(EIL, format = "f", digits = 5))
-        mat_res[1, 5] <- formatC(fees_x, digits = 4, format = "f")
-        mat_res[1, 6] <- format(fees_y, nsmall = 4, format = "f")
 
-        Pa <- 990
-        Pb <- 1010
-        range_factor <- sqrt(Pb / Pa)
+        ranges <- ranges_list
 
-        EIL <- calc_eil(P, Pa, Pb, mu, sigma, t)
-        time_ITM <- calc_time_ITM_integrals(P, Pa, Pb, mu, sigma, t)
-        alpha <- calc_alpha(mu, sigma, time_ITM)
-        fees_x <- calc_expected_total_fees_x(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, alpha)
-        beta <- calc_beta(mu, sigma, time_ITM)
-        fees_y <- calc_expected_total_fees_y(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, beta)
+        for (i in 1:length(ranges_list)) {
 
-        mat_res[2, 1] <- formatC(mu, format = "e", digits = 2)
-        mat_res[2, 2] <- formatC(range_factor, digits = 3, format = "f")
-        mat_res[2, 3] <- formatC(time_ITM, digits = 2, format = "f")
-        mat_res[2, 4] <- ifelse((-1 * EIL) < THRESHOLD, formatC(EIL, format = "e", digits = 2) , formatC(EIL, format = "f", digits = 5))
-        mat_res[2, 5] <- formatC(fees_x, digits = 4, format = "f")
-        mat_res[2, 6] <- format(fees_y, nsmall = 4, format = "f")
+            active_range <- ranges[[i]]
 
-        Pa <- 909
-        Pb <- 1100
-        range_factor <- sqrt(Pb / Pa)
+            Pa <- active_range[1]
+            Pb <- active_range[2]
+            range_factor <- sqrt(Pb / Pa)
+            
+            sigma <- 0.001
+            results <- compute_row_data(V, P, Pa, Pb, mu, sigma, t)
 
-        EIL <- calc_eil(P, Pa, Pb, mu, sigma, t)
-        time_ITM <- calc_time_ITM_integrals(P, Pa, Pb, mu, sigma, t)
-        alpha <- calc_alpha(mu, sigma, time_ITM)
-        fees_x <- calc_expected_total_fees_x(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, alpha)
-        beta <- calc_beta(mu, sigma, time_ITM)
-        fees_y <- calc_expected_total_fees_y(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, beta)
-        
-        mat_res[3, 1] <- formatC(mu, format = "e", digits = 2)
-        mat_res[3, 2] <- formatC(range_factor, digits = 3, format = "f")
-        mat_res[3, 3] <- formatC(time_ITM, digits = 2, format = "f")
-        mat_res[3, 4] <- ifelse((-1 * EIL) < THRESHOLD, formatC(EIL, format = "e", digits = 2) , formatC(EIL, format = "f", digits = 5))
-        mat_res[3, 5] <- formatC(fees_x, digits = 4, format = "f")
-        mat_res[3, 6] <- format(fees_y, nsmall = 4, format = "f")
+            EIL <- results[[1]]
+            time_ITM <- results[[2]]
+            fees_x <- results[[3]]
+            fees_y <- results[[4]]
 
+            mat_res[i, 1] <- formatC(mu, format = "e", digits = 2)
+            mat_res[i, 2] <- formatC(range_factor, digits = 3, format = "f")
+            mat_res[i, 3] <- formatC(time_ITM, digits = 2, format = "f")
+            mat_res[i, 4] <- ifelse((-1 * EIL) < EIL_THRESHOLD, formatC(EIL, format = "e", digits = 2) , formatC(EIL, format = "f", digits = 5))
+            mat_res[i, 5] <- formatC(fees_x, digits = 4, format = "f")
+            mat_res[i, 6] <- format(fees_y, nsmall = 4, format = "f")
 
-        Pa <- 833.33
-        Pb <- 1200
-        range_factor <- sqrt(Pb / Pa)
+            sigma <- sigma * 2
+            results <- compute_row_data(V, P, Pa, Pb, mu, sigma, t)
+            
+            EIL <- results[[1]]
+            time_ITM <- results[[2]]
+            fees_x <- results[[3]]
+            fees_y <- results[[4]]
 
-        EIL <- calc_eil(P, Pa, Pb, mu, sigma, t)
-        time_ITM <- calc_time_ITM_integrals(P, Pa, Pb, mu, sigma, t)
-        alpha <- calc_alpha(mu, sigma, time_ITM)
-        fees_x <- calc_expected_total_fees_x(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, alpha)
-        beta <- calc_beta(mu, sigma, time_ITM)
-        fees_y <- calc_expected_total_fees_y(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, beta)
-        
-        mat_res[4, 1] <- formatC(mu, format = "e", digits = 2)
-        mat_res[4, 2] <- formatC(range_factor, digits = 3, format = "f")
-        mat_res[4, 3] <- formatC(time_ITM, digits = 2, format = "f")
-        mat_res[4, 4] <- ifelse((-1 * EIL) < THRESHOLD, formatC(EIL, format = "e", digits = 2) , formatC(EIL, format = "f", digits = 5))
-        mat_res[4, 5] <- formatC(fees_x, digits = 4, format = "f")
-        mat_res[4, 6] <- format(fees_y, nsmall = 4, format = "f")
+            mat_res[i, 7] <- formatC(time_ITM, digits = 2, format = "f")
+            mat_res[i, 8] <- ifelse((-1 * EIL) < EIL_THRESHOLD, formatC(EIL, format = "e", digits = 2) , formatC(EIL , format = "f", digits = 5))
+            mat_res[i, 9] <- formatC(fees_x, digits = 4, format = "f")
+            mat_res[i, 10] <-format(fees_y, nsmall = 4, format = "f")
 
-
-        Pa <- 500
-        Pb <- 2000
-        range_factor <- sqrt(Pb / Pa)
-
-        EIL <- calc_eil(P, Pa, Pb, mu, sigma, t)
-        time_ITM <- calc_time_ITM_integrals(P, Pa, Pb, mu, sigma, t)
-        alpha <- calc_alpha(mu, sigma, time_ITM)
-        fees_x <- calc_expected_total_fees_x(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, alpha)
-        beta <- calc_beta(mu, sigma, time_ITM)
-        fees_y <- calc_expected_total_fees_y(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, beta)
-        
-        mat_res[5, 1] <- formatC(mu, format = "e", digits = 2)
-        mat_res[5, 2] <- formatC(range_factor, digits = 3, format = "f")
-        mat_res[5, 3] <- formatC(time_ITM, digits = 2, format = "f")
-        mat_res[5, 4] <- ifelse((-1 * EIL) < THRESHOLD, formatC(EIL, format = "e", digits = 2) , formatC(EIL, format = "f", digits = 5))
-        mat_res[5, 5] <- formatC(fees_x, digits = 4, format = "f")
-        mat_res[5, 6] <- format(fees_y, nsmall = 4, format = "f")
-
-
-        Pa <- 200
-        Pb <- 5000
-        range_factor <- sqrt(Pb / Pa)
-
-        EIL <- calc_eil(P, Pa, Pb, mu, sigma, t)
-        time_ITM <- calc_time_ITM_integrals(P, Pa, Pb, mu, sigma, t)
-        alpha <- calc_alpha(mu, sigma, time_ITM)
-        fees_x <- calc_expected_total_fees_x(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, alpha)
-        beta <- calc_beta(mu, sigma, time_ITM)
-        fees_y <- calc_expected_total_fees_y(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, beta)
-        
-        # print(glue::glue("EIL {prettyNum(EIL,big.mark=',')} time ITM {prettyNum(time_ITM,big.mark=',')} hours"))
-
-
-        mat_res[6, 1] <- formatC(mu, format = "e", digits = 2)
-        mat_res[6, 2] <- formatC(range_factor, digits = 3, format = "f")
-        mat_res[6, 3] <- formatC(time_ITM, digits = 2, format = "f")
-        mat_res[6, 4] <- ifelse((-1 * EIL) < THRESHOLD, formatC(EIL, format = "e", digits = 2) , formatC(EIL, format = "f", digits = 5))
-        mat_res[6, 5] <- formatC(fees_x, digits = 4, format = "f")
-        mat_res[6, 6] <- format(fees_y, nsmall = 4, format = "f")
-
-        # # sigma = 0.002
-
-        sigma <- 0.002
-        Pa <- 999
-        Pb <- 1001
-        range_factor <- sqrt(Pb / Pa)
-
-        EIL <- calc_eil(P, Pa, Pb, mu, sigma, t)
-        time_ITM <- calc_time_ITM_integrals(P, Pa, Pb, mu, sigma, t)
-        alpha <- calc_alpha(mu, sigma, time_ITM)        
-        fees_x <- calc_expected_total_fees_x(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, alpha)
-        beta <- calc_beta(mu, sigma, time_ITM)
-        fees_y <- calc_expected_total_fees_y(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, beta)
-        
-        mat_res[1, 7] <- formatC(time_ITM, digits = 2, format = "f")
-        mat_res[1, 8] <- ifelse((-1 * EIL) < THRESHOLD, formatC(EIL, format = "e", digits = 2) , formatC(EIL , format = "f", digits = 5))
-        mat_res[1, 9] <- formatC(fees_x, digits = 4, format = "f")
-        mat_res[1, 10] <-format(fees_y, nsmall = 4, format = "f")
-
-        Pa <- 990
-        Pb <- 1010
-        range_factor <- sqrt(Pb / Pa)
-
-        EIL <- calc_eil(P, Pa, Pb, mu, sigma, t)
-        time_ITM <- calc_time_ITM_integrals(P, Pa, Pb, mu, sigma, t)
-        alpha <- calc_alpha(mu, sigma, time_ITM)
-        fees_x <- calc_expected_total_fees_x(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, alpha)
-        beta <- calc_beta(mu, sigma, time_ITM)
-        fees_y <- calc_expected_total_fees_y(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, beta)
-        
-        mat_res[2, 7] <- formatC(time_ITM, digits = 2, format = "f")
-        mat_res[2, 8] <- ifelse((-1 * EIL) < THRESHOLD, formatC(EIL, format = "e", digits = 2) , formatC(EIL, format = "f", digits = 5))
-        mat_res[2, 9] <- formatC(fees_x, digits = 4, format = "f")
-        mat_res[2, 10] <-format(fees_y, nsmall = 4, format = "f")
-
-        Pa <- 909
-        Pb <- 1100
-        range_factor <- sqrt(Pb / Pa)
-
-        EIL <- calc_eil(P, Pa, Pb, mu, sigma, t)
-        time_ITM <- calc_time_ITM_integrals(P, Pa, Pb, mu, sigma, t)
-        alpha <- calc_alpha(mu, sigma, time_ITM)
-        fees_x <- calc_expected_total_fees_x(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, alpha)
-        beta <- calc_beta(mu, sigma, time_ITM)
-        fees_y <- calc_expected_total_fees_y(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, beta)
-        
-        mat_res[3, 7] <- formatC(time_ITM, digits = 2, format = "f")
-        mat_res[3, 8] <- ifelse((-1 * EIL) < THRESHOLD, formatC(EIL, format = "e", digits = 2) , formatC(EIL, format = "f", digits = 5))
-        mat_res[3, 9] <- formatC(fees_x, digits = 4, format = "f")
-        mat_res[3, 10] <-format(fees_y, nsmall = 4, format = "f")
-
-        Pa <- 833.33
-        Pb <- 1200
-        range_factor <- sqrt(Pb / Pa)
-
-        EIL <- calc_eil(P, Pa, Pb, mu, sigma, t)
-        time_ITM <- calc_time_ITM_integrals(P, Pa, Pb, mu, sigma, t)
-        alpha <- calc_alpha(mu, sigma, time_ITM)
-        fees_x <- calc_expected_total_fees_x(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, alpha)
-        beta <- calc_beta(mu, sigma, time_ITM)
-        fees_y <- calc_expected_total_fees_y(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, beta)
-        
-        mat_res[4, 7] <- formatC(time_ITM, digits = 2, format = "f")
-        mat_res[4, 8] <- ifelse((-1 * EIL) < THRESHOLD, formatC(EIL, format = "e", digits = 2) , formatC(EIL, format = "f", digits = 5))
-        mat_res[4, 9] <- formatC(fees_x, digits = 4, format = "f")
-        mat_res[4, 10] <-format(fees_y, nsmall = 4, format = "f")
-
-        Pa <- 500
-        Pb <- 2000
-        range_factor <- sqrt(Pb / Pa)
-
-        EIL <- calc_eil(P, Pa, Pb, mu, sigma, t)
-        time_ITM <- calc_time_ITM_integrals(P, Pa, Pb, mu, sigma, t)
-        alpha <- calc_alpha(mu, sigma, time_ITM)        
-        fees_x <- calc_expected_total_fees_x(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, alpha)
-        beta <- calc_beta(mu, sigma, time_ITM)
-        fees_y <- calc_expected_total_fees_y(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, beta)
-        
-        mat_res[5, 7] <- formatC(time_ITM, digits = 2, format = "f")
-        mat_res[5, 8] <- ifelse((-1 * EIL) < THRESHOLD, formatC(EIL, format = "e", digits = 2) , formatC(EIL, format = "f",digits = 5))
-        mat_res[5, 9] <- formatC(fees_x, digits = 4, format = "f")
-        mat_res[5, 10] <-format(fees_y, nsmall = 4, format = "f")
-
-        Pa <- 200
-        Pb <- 5000
-        range_factor <- sqrt(Pb / Pa)
-
-        EIL <- calc_eil(P, Pa, Pb, mu, sigma, t)
-        time_ITM <- calc_time_ITM_integrals(P, Pa, Pb, mu, sigma, t)
-        alpha <- calc_alpha(mu, sigma, time_ITM)        
-        fees_x <- calc_expected_total_fees_x(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, alpha)
-        beta <- calc_beta(mu, sigma, time_ITM)
-        fees_y <- calc_expected_total_fees_y(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, beta)
-        
-        mat_res[6, 7] <- formatC(time_ITM, digits = 2, format = "f")
-        mat_res[6, 8] <- ifelse((-1 * EIL) < THRESHOLD, formatC(EIL, format = "e", digits = 2) , formatC(EIL, format = "f", digits = 5))
-        mat_res[6, 9] <- formatC(fees_x, digits = 4, format = "f")
-        mat_res[6, 10] <-format(fees_y, nsmall = 4, format = "f")
+        }
 
         return(mat_res)
 }
 
 run_calc <- function(mu, t) {
 
+    ranges_list <- list(
+        c(999, 1001),
+        c(990, 1010),
+        c(909, 1100),
+        c(833.33, 1200),
+        c(500, 2000),
+        c(200, 5000)
+    )
+
     tryCatch({
         
-        first_chunk <- calc_chunk(mu, t)
-        second_chunk <- calc_chunk(mu * 2, t)
+        first_chunk <- calc_chunk(ranges_list, mu, t)
+        second_chunk <- calc_chunk(ranges_list, mu * 2, t)
 
         prmatrix(first_chunk)
         prmatrix(second_chunk)
