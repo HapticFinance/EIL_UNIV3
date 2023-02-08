@@ -2,12 +2,12 @@
 path = getwd()
 source(paste(path, "/install.r", sep=""))
 
-
 psi_below_pa <- function(x, t, P, Pa, Pb, mu, sigma) {
 
     first_term_num <- (exp(x) * (sqrt(P/Pa) - 1) - 1 + sqrt(Pa/P))
     first_term_den <- (exp(x) * (1 - sqrt(P/Pb)) + 1 - sqrt(Pa/P))
-    second_term <- ((x - (mu - ((sigma^2)/2) * t))^2) / (2 * t * (sigma^2))
+    second_term <- (x - (mu - (sigma^2/2)) * t)^2 / (2 * t * (sigma^2))
+    
     exponentiated <- exp(-second_term)
     res <- (first_term_num / first_term_den) * exponentiated
 
@@ -18,7 +18,8 @@ psi_in_range <- function(x, t, P, Pa, Pb, mu, sigma) {
 
     first_term_num <- (2 * sqrt(exp(x)) - 1 - exp(x))
     first_term_den <- ((1 + exp(x) - sqrt(Pa/P) - exp(x) * sqrt(P/Pb)))
-    second_term <- ((x - (mu - ((sigma^2)/2) * t))^2) / (2 * t * (sigma^2))
+    second_term <- (x - (mu - (sigma^2/2)) * t)^2 / (2 * t * (sigma^2))
+
     exponentiated <- exp(-second_term)
     res <- (first_term_num / first_term_den) * exponentiated
 
@@ -29,7 +30,7 @@ psi_above_pb <- function(x, t, P, Pa, Pb, mu, sigma) {
 
     first_term_num <- (sqrt(Pb/P) - (exp(x) * (1 - sqrt(P/Pb))) -1)
     first_term_den <- (exp(x) * (1 - sqrt(P/Pb)) + 1 - sqrt(Pa/P))
-    second_term <- ((x - (mu - ((sigma^2)/2) * t))^2) / (2 * t * (sigma^2))
+    second_term <- (x - (mu - (sigma^2/2)) * t)^2 / (2 * t * (sigma^2))
     exponentiated <- exp(-second_term)
     res <- (first_term_num / first_term_den) * exponentiated
 
@@ -41,13 +42,13 @@ calc_eil_integrals <- function(f, P, Pa, Pb, mu, sigma, t) {
     exec <- f(0, 0, 0, 0, 0, 0, 0)
     func_name <- match.call()[2]
 
-    if (func_name == "psi_below_pa()") {
+    if (func_name == "psi_below_pa()" ) {
         lower_bound <- -Inf 
         upper_bound <- log(Pa / P)
-    } else if (func_name == "psi_in_range()") {
+    } else if (func_name == "psi_in_range()" ) {
         lower_bound <- log(Pa / P)
         upper_bound <- log(Pb / P)
-    } else if (func_name == "psi_above_pb()") {
+    } else if (func_name == "psi_above_pb()" ) {
         lower_bound <- log(Pb / P)
         upper_bound <- Inf
     }
@@ -59,7 +60,7 @@ calc_eil_integrals <- function(f, P, Pa, Pb, mu, sigma, t) {
         subdivisions = 5000,
         abs.tol = 1e-5, 
         rel.tol = 1e-7,  
-        stop.on.error = T,
+        stop.on.error = F,
         t = t, 
         P = P, 
         Pa = Pa,    
@@ -73,37 +74,31 @@ calc_eil_integrals <- function(f, P, Pa, Pb, mu, sigma, t) {
 }
 
 
-calc_time_ITM_integrals <- function(P, Pa, Pb, mu, sigma, t) {
+calc_time_ITM_integrals <- function(P, Pa, Pb, mu, sigma, T) {
 
     lower_bound <- log(Pa / P)
     upper_bound <- log(Pb / P)
 
-    InnerFunc = function(x, mu, sigma, t) { 
-        second_term <- (x - (mu - (sigma^2/2)) * t)^2 / (2 * t * (sigma^2))
-        exponentiated <- exp(-second_term) 
-        res <- exponentiated / sqrt(t)
+    f <- function(x, y, mu, sigma) {
+        t <- y
+        exp(-(x - (mu - (sigma^2/2)) * t)^2 / (2 * t * (sigma^2))) / sqrt(t)
     }
 
-    InnerIntegral = Vectorize(
-        function(y) { 
-            integrate(
-                InnerFunc, 
-                lower_bound, 
-                upper_bound,
-                subdivisions = 5000,
-                abs.tol = 1e-5, 
-                rel.tol = 1e-7,  
-                stop.on.error = F,
-                mu = mu,
-                sigma = sigma,
-                t = t
-            )$value
-    })
+    integral <- dblquad(
+        f, 
+        log(Pa/P), 
+        log(Pb/P), 
+        0, 
+        T,
+        tol=1e-5,
+        subdivs=5000, 
+        mu=mu, 
+        sigma=sigma
+    )
 
-    res <- integrate(InnerIntegral, 0, t)$value
-    coefficient <- (1 / (sigma * sqrt(2 * pi)))
-
-    return(coefficient * res)
+    result <- (1 / (sigma * (sqrt(2 * pi)))) * integral[1]
+    
+    return(result)
 }
 
 calc_eil <- function(P, Pa, Pb, mu, sigma, t) {
@@ -160,13 +155,15 @@ calc_capital_efficiency_simplified <- function(r) {
 }
 
 
-compute_row_data <- function( V, P, Pa, Pb, mu, sigma, t) {
+compute_row_data <- function(V, P, Pa, Pb, mu, sigma, t) {
+
     EIL <- calc_eil(P, Pa, Pb, mu, sigma, t)
     time_ITM <- calc_time_ITM_integrals(P, Pa, Pb, mu, sigma, t)
     alpha <- calc_alpha(mu, sigma, time_ITM)
     fees_x <- calc_expected_total_fees_x(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, alpha)
     beta <- calc_beta(mu, sigma, time_ITM)
     fees_y <- calc_expected_total_fees_y(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, beta)
+
     return(list(EIL, time_ITM, fees_x,  fees_y))
 }
 
@@ -238,9 +235,6 @@ run_calc <- function(mu, t) {
         first_chunk <- calc_chunk(ranges_list, mu, t)
         second_chunk <- calc_chunk(ranges_list, mu * 2, t)
 
-        prmatrix(first_chunk)
-        prmatrix(second_chunk)
-
         combined <- rbind(first_chunk, second_chunk)
 
         prmatrix(combined)
@@ -255,3 +249,4 @@ run_calc <- function(mu, t) {
 
     })
 }
+ 

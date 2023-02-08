@@ -24,7 +24,8 @@ packages <- c(
   "ghql",
   "jsonlite",
   "xts",
-  "tidyverse"
+  "tidyverse",
+  "cubature"
 )
 
 #install.packages("/data/code/BSC/Haptic/haptic_poc/NORMT3", repos=NULL,  type="source")
@@ -47,13 +48,3 @@ if (any(installed_packages == FALSE)) {
 
 # Packages loading
 invisible(lapply(packages, library, character.only = TRUE, quietly = TRUE))
-
-`?` <- function(x, y)
-    eval(
-      sapply(
-        strsplit(
-          deparse(substitute(y)), 
-          ":"
-      ), 
-      function(e) parse(text = e)
-    )[[2 - as.logical(x)]])

@@ -99,9 +99,9 @@ real_volume_vector <- values[[9]]
 S <- values[[10]]
 time_itm <- values[[11]]
 
-mat_eil_mu_one <- run_calc(168) 
+chunk_one <- run_calc(mu, 168) 
 
-mat_eil_mu_one_long <- run_calc(720) 
+chunk_two <- run_calc(mu, 720) 
 
 ```
 
@@ -113,18 +113,17 @@ mat_eil_mu_one_long <- run_calc(720)
 ```{r, echo=FALSE, warning=FALSE, results='asis'}
 
 collapse_rows_dt <- data.frame(
-    C1 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 1],
-    C2 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 2],
-    C3 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 3],
-    C4 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 4],
-    C5 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 5],
-    C6 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 6],
-    C7 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 7],
-    C8 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 8],
-    C9 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 9],
-    C10 = mat_eil_mu_one[1:nrow(mat_eil_mu_one), 10]
+    C1 = chunk_one[1:nrow(chunk_one), 1],
+    C2 = chunk_one[1:nrow(chunk_one), 2],
+    C3 = chunk_one[1:nrow(chunk_one), 3],
+    C4 = chunk_one[1:nrow(chunk_one), 4],
+    C5 = chunk_one[1:nrow(chunk_one), 5],
+    C6 = chunk_one[1:nrow(chunk_one), 6],
+    C7 = chunk_one[1:nrow(chunk_one), 7],
+    C8 = chunk_one[1:nrow(chunk_one), 8],
+    C9 = chunk_one[1:nrow(chunk_one), 9],
+    C10 = chunk_one[1:nrow(chunk_one), 10]
 )
-
 
 
 sigmaMsg <- paste("$\\\\sigma = $ ", sigma, sep="")
@@ -146,16 +145,16 @@ kbl(booktabs = T,
                         print()
 
 collapse_rows_dt <- data.frame(
-    C1 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 1],
-    C2 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 2],
-    C3 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 3],
-    C4 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 4],
-    C5 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 5],
-    C6 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 6],
-    C7 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 7],
-    C8 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 8],
-    C9 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 9],
-    C10 = mat_eil_mu_one_long[1:nrow(mat_eil_mu_one_long), 10]
+    C1 = chunk_two[1:nrow(chunk_two), 1],
+    C2 = chunk_two[1:nrow(chunk_two), 2],
+    C3 = chunk_two[1:nrow(chunk_two), 3],
+    C4 = chunk_two[1:nrow(chunk_two), 4],
+    C5 = chunk_two[1:nrow(chunk_two), 5],
+    C6 = chunk_two[1:nrow(chunk_two), 6],
+    C7 = chunk_two[1:nrow(chunk_two), 7],
+    C8 = chunk_two[1:nrow(chunk_two), 8],
+    C9 = chunk_two[1:nrow(chunk_two), 9],
+    C10 = chunk_two[1:nrow(chunk_two), 10]
 )
 
 
