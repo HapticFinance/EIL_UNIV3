@@ -97,14 +97,12 @@ lvr_vector <- values[[7]]
 daily_volatility_vector <- values[[8]]
 real_volume_vector <- values[[9]]
 S <- values[[10]]
-time_itm <- values[[11]]
+gbm_res <- values[[11]]
 
 chunk_one <- run_calc(mu, 168) 
-
 chunk_two <- run_calc(mu, 720) 
 
 ```
-
 \newpage
 
 \subsection{Simulation results} 
@@ -125,7 +123,6 @@ collapse_rows_dt <- data.frame(
     C10 = chunk_one[1:nrow(chunk_one), 10]
 )
 
-
 sigmaMsg <- paste("$\\\\sigma = $ ", sigma, sep="")
 sigmaMsg2 <- paste("$\\\\sigma = $ ", 0.002, sep="")
 
@@ -135,7 +132,7 @@ kbl(booktabs = T,
     longtable = T, 
     escape = FALSE, 
     col.names = c( "$\\mu$", "r", "$\\Tau$", "EIL", "EFX", "EFY", "$\\Tau$", "EIL", "EFX", "EFY"),
-    caption = "Table 1: Results for setting $\\mu$ = 7.5e−5, 1.5e−4 and $\\sigma$ = 0.001 and $\\sigma$ = 0.002 for a week (T = 168 hours) of providing liquidity with initial price \\$1000."
+    caption = "Table 1: Results for setting $\\mu$ = 7.5e−5, 1.5e−4 and $\\sigma$ = 0.001 and $\\sigma$ = 0.002 for 7 days (T = 168 hours) of providing liquidity with initial price \\$1000."
     ) %>%  kable_styling(font_size = 8) %>%
     column_spec(1, bold=F) %>%
         collapse_rows(columns = 1, latex_hline = "major", valign = "middle")  %>%
@@ -176,6 +173,26 @@ kbl(booktabs = T,
                 add_header_above(escape =FALSE, c(" ", setNames(5,sigmaMsg), setNames(4,sigmaMsg2)))   %>%
                     kable_styling(font_size = 8, latex_options = c("hold_position", "repeat_header")) %>%
                         print()
+
+total_fees <- gbm_res[1, 1]
+total_time_itm <- gbm_res[1, 2]
+
+position_info <- cbind(  
+    as.numeric(total_fees),
+    as.numeric(total_time_itm)
+)
+
+df_position_info <- data.frame(position_info)
+colnames(df_position_info) <- c("Total fees", "Time (hours)")
+df_position_info <-  setNames(df_position_info, c("Total fees", "Time (hours)"))
+row.names(df_position_info) <- NULL
+
+df_position_info %>%
+kbl( caption = paste(""), booktabs = T) %>%
+    kable_styling(latex_options = "HOLD_position", position="left") %>%
+    kable_classic(full_width = F, html_font = "Cambria") %>%
+      print()
+
 
 ```
 
