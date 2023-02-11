@@ -25,7 +25,8 @@ packages <- c(
   "jsonlite",
   "xts",
   "tidyverse",
-  "cubature"
+  "cubature",
+  "LSMRealOptions"
 )
 
 #install.packages("/data/code/BSC/Haptic/haptic_poc/NORMT3", repos=NULL,  type="source")
