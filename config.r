@@ -5,7 +5,7 @@ source(paste(path, "/install.r", sep=""))
 # Initial parameters
 
 # Number of simulations
-n_sim <- 100
+n_sim <- 25000
 
 # Initial price
 S0 <- 1000

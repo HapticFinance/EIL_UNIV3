@@ -1,5 +1,5 @@
 ---
-title: "Expected impermanent loss for Uniswap v3 positions"
+title: "Expected IL for Uniswap v3 positions"
 author:
 - 0xAlbert.eth
 - folch.eth
