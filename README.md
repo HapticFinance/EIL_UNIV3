@@ -21,6 +21,6 @@ This work is part of the research conducted while designing the Haptic protocol.
 
 The necessary dependencies will be installed and a pdf file will be generated in the `pdf/` folder. The simulation parameters can be found in the `config.r` file.
 
-# References
+## References
 
 - [1] Concentrated Liquidity Analysis in Uniswap V3 from DeFi'22: Proceedings of the 2022 ACM CCS Workshop on Decentralized Finance and Security November 2022, pages 63–70, available at https://doi.org/10.1145/3560832.3563438
