@@ -1,5 +1,9 @@
 ---
-title: "Haptic"
+title: "Expected impermanent loss for Uniswap v3 positions"
+author:
+- 0xAlbert.eth
+- folch.eth
+- 0xOli
 date: \today
 abstract: ""
 pdf_document: null
@@ -58,49 +62,25 @@ options(scipen=999) # avoid scientific notation
 options(width = 60)
 
 path = getwd()
+source(paste(path, "/config.r", sep=""))
 source(paste(path, "/sim.r", sep=""))
 source(paste(path, "/static.r", sep=""))
 
-t = 168
-P = 1000
-Pa = 999
-Pb = 1001
-x = 2
-y = x * P
-mu = 0.000075
-sigma = 0.001
+T = 168
+P = S0
 
-in_range <- (Pa <= P && Pb >= P)
-
-if (Pa > P && !in_range) {
-  # single asset liquidity
-  y = 0
-} else if (Pa < P && !in_range) {
-  # single asset liquidity
-  x = 0
-} else if (in_range) {
-  # dual asset liquidity
-  sp = P ** 0.5
-  sa = Pa ** 0.5
-  sb = Pb ** 0.5
-  L = get_liquidity_0(x, sp, sb)
-  y = calculate_y(L, sp, sa, sb)
-} 
-
-rangeFactor <- sqrt(Pb / Pa)
-
-chunk_one <- run_calc(mu, sigma, 168) 
-chunk_two <- run_calc(mu, sigma,  720) 
+chunk_one <- run_calc(mu, sigma, T) 
+chunk_two <- run_calc(mu, sigma,  T * 2) 
 
 ```
 \newpage
 
 \section{Introduction}
 
-Impermament loss (IL) or divergence-loss, is a phenomena experienced by LP providers on almost all types of AMM platforms, especially for non-mean reverting assets. This phenomena has been studied extensively because of its negative impact on LP providers' returns \cite{LOE} \cite{DZ}. When modelling an asset's price with a geometric brownian motion (GBM), IL can be estimated numerically by using iterative techniques, such as the Monte Carlo method. The result of this estimation is referred to as "expected impermanent loss" (EIL). Previous work concluded that the computation of EIL for Uniswap v3 positions is analytically intractable, due to the complexity of the math expressions involving the GBM \cite{GSL}. However, a recent paper provided formulas for the analytical computation of EIL for Uniswap v3 positions \cite{CV3}. We implement the ideas presented in the paper and compare the results with the results obtained from the Monte Carlo simulation.
+Impermament loss (IL) or divergence-loss, is a phenomena experienced by LP providers on almost all types of AMM platforms, especially for non-mean reverting assets. This phenomena has been studied extensively because of its negative impact on LP providers' returns \cite{LOE} \cite{DZ}. When modelling an asset's price with a geometric brownian motion (GBM), IL can be estimated numerically by using iterative techniques such as the Monte Carlo method. The result of this estimation is referred to as "expected impermanent loss" (EIL). Previous work wrongly concluded that the computation of EIL for Uniswap v3 positions is analytically intractable, due to the complexity of the math expressions involving the GBM \cite{GSL}. However, a recent paper provided formulas for the analytical computation of EIL for Uniswap v3 positions \cite{CV3}. We implement the ideas presented in the paper and compare the results with the results obtained from the Monte Carlo simulation.
 
 \section{Technical details}
-The integrals in the analytical computation of EIL are calculated using the "_integrate_" R function, which is based on QUADPACK routines dqags and dqagi by R. Piessens and E. deDoncker–Kapenga.
+The integrals in the analytical computation of EIL are calculated using the "_integrate_" R function, which is based on QUADPACK routines dqags and dqagi by R. Piessens and E. deDoncker–Kapenga \cite{PIE}.
 
 ```{r a, eval=FALSE}
 
@@ -190,7 +170,7 @@ collapse_rows_dt <- data.frame(
 )
 
 sigmaMsg <- paste("$\\\\sigma = $ ", sigma, sep="")
-sigmaMsg2 <- paste("$\\\\sigma = $ ", 0.002, sep="")
+sigmaMsg2 <- paste("$\\\\sigma = $ ", sigma * 2, sep="")
 
 collapse_rows_dt %>%
 kbl(booktabs = T, 
@@ -221,7 +201,7 @@ collapse_rows_dt <- data.frame(
 )
 
 sigmaMsg <- paste("$\\\\sigma = $ ", sigma, sep="")
-sigmaMsg2 <- paste("$\\\\sigma = $ ", 0.002, sep="")
+sigmaMsg2 <- paste("$\\\\sigma = $ ", sigma * 2, sep="")
 
 collapse_rows_dt %>%
 kbl(booktabs = T, 

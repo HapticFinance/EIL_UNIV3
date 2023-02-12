@@ -1,5 +1,6 @@
 #!/usr/bin/env Rscript
 path = getwd()
+source(paste(path, "/config.r", sep=""))
 source(paste(path, "/install.r", sep=""))
 source(paste(path, "/static.r", sep=""))
 
@@ -200,10 +201,7 @@ compute_row_data <- function(
 calc_chunk <- function(ranges_list, mu, sigma, t) {
 
     mat_res <- matrix(ncol = 6, nrow = 6) 
-    EIL_THRESHOLD <- 0.001
-    n_sim <- 1000
-    V <- 5000
-    P <- 1000
+    P <- S0
 
     ranges <- ranges_list
     res <- price_at_t(n_sim, P, Pa, Pb, mu, sigma, t)
@@ -236,15 +234,6 @@ calc_chunk <- function(ranges_list, mu, sigma, t) {
 }
 
 run_calc <- function(mu, sigma, t) {
-
-    ranges <- list(
-        c(999, 1001),
-        c(990, 1010),
-        c(909, 1100),
-        c(833.33, 1200),
-        c(500, 2000),
-        c(200, 5000)
-    )
 
     tryCatch({
         
