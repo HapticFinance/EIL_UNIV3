@@ -2,6 +2,8 @@
 title: "Haptic"
 date: \today
 abstract: ""
+pdf_document: null
+geometry: "margin=45mm"
 output: 
   pdf_document:
       toc: true
@@ -15,7 +17,6 @@ output:
       #]
 html_document: default
 tables: yes
-geometry: margin=35mm
 latex_engine: pdflatex
 header-includes:
     - \usepackage{float}
@@ -54,6 +55,7 @@ knit: (function(inputFile, encoding) {
 ```{r results="asis", warning=FALSE, echo=FALSE}
 options(knitr.kable.NA = '') 
 options(scipen=999) # avoid scientific notation
+options(width = 60)
 
 path = getwd()
 source(paste(path, "/sim.r", sep=""))
@@ -85,15 +87,7 @@ if (Pa > P && !in_range) {
   y = calculate_y(L, sp, sa, sb)
 } 
 
-values <- run_sim(P, Pa, Pb, x, y, t, mu, sigma)
 rangeFactor <- sqrt(Pb / Pa)
-
-IL_v <- values[[1]]
-lvr_vector <- values[[2]]
-daily_volatility_vector <- values[[3]]
-real_volume_vector <- values[[4]]
-S <- values[[5]]
-gbm_res <- values[[6]]
 
 chunk_one <- run_calc(mu, sigma, 168) 
 chunk_two <- run_calc(mu, sigma,  720) 
@@ -101,7 +95,84 @@ chunk_two <- run_calc(mu, sigma,  720)
 ```
 \newpage
 
-\subsection{Simulation results} 
+\section{Introduction}
+
+Impermament loss (IL) or divergence-loss, is a phenomena experienced by LP providers on almost all types of AMM platforms, especially for non-mean reverting assets. This phenomena has been studied extensively because of its negative impact on LP providers' returns \cite{LOE} \cite{DZ}. When modelling an asset's price with a geometric brownian motion (GBM), IL can be estimated numerically by using iterative techniques, such as the Monte Carlo method. The result of this estimation is referred to as "expected impermanent loss" (EIL). Previous work concluded that the computation of EIL for Uniswap v3 positions is analytically intractable, due to the complexity of the math expressions involving the GBM \cite{GSL}. However, a recent paper provided formulas for the analytical computation of EIL for Uniswap v3 positions \cite{CV3}. We implement the ideas presented in the paper and compare the results with the results obtained from the Monte Carlo simulation.
+
+\section{Technical details}
+The integrals in the analytical computation of EIL are calculated using the "_integrate_" R function, which is based on QUADPACK routines dqags and dqagi by R. Piessens and E. deDoncker–Kapenga.
+
+```{r a, eval=FALSE}
+
+function(f, lb, ub, P, Pa, Pb, mu, sigma, T) {
+
+    integral <- integrate(
+        f,
+        # Lower integration bound
+        lb, 
+        # Upper integration bound
+        ub, 
+        subdivisions = 5000,
+        abs.tol = 1e-5, 
+        rel.tol = 1e-7,  
+        stop.on.error = F,
+        T, 
+        P, 
+        Pa,    
+        Pb,
+        mu,
+        sigma
+    )$value;
+
+    coefficient <- (1 / (sigma * sqrt(2 * pi * T)))
+    return(coefficient * integral)
+}
+
+```
+
+\newpage
+
+ The two-dimensional integrals for the computation of "_time in the money_" are calculated using the dblquad function from the pracma library [ref]. 
+
+```{r b, eval=FALSE}
+
+function(P, Pa, Pb, mu, sigma, T) {
+
+    lower_bound <- log(Pa / P)
+    upper_bound <- log(Pb / P)
+
+    f <- function(x, y, mu, sigma) {
+        t <- y
+        first_term <- -(x - (mu - (sigma^2 / 2)) * t)^2
+        second_term <- (2 * t * (sigma^2))
+        exp(first_term / second_term) / sqrt(t)
+    }
+
+    integral <- dblquad(
+        f,
+        # Lower integration bound 
+        log(Pa/P), 
+        # Upper integration bound
+        log(Pb/P), 
+        0, 
+        T,
+        tol=1e-5,
+        subdivs=5000, 
+        mu=mu, 
+        sigma=sigma
+    )
+
+    result <- (1 / (sigma * (sqrt(2 * pi)))) * integral[1]
+    
+    return(result)
+}
+
+
+```
+
+\newpage
+
+\section{Simulation results} 
 \label{simres}
 
 ```{r, echo=FALSE, warning=FALSE, results='asis'}
@@ -128,12 +199,12 @@ kbl(booktabs = T,
     escape = FALSE, 
     col.names = c( "$\\mu$", "r", "CE", "$\\Tau$", "EIL", "IL","$\\Tau$", "EIL", "IL"),
     caption = "Table 1: Results for setting $\\mu$ = 7.5e−5, 1.5e−4 and $\\sigma$ = 0.001 and $\\sigma$ = 0.002 for 7 days (T = 168 hours) of providing liquidity with initial price \\$1000."
-    ) %>%  kable_styling(font_size = 8) %>%
+    ) %>%  kable_styling(font_size = 9) %>%
     column_spec(1, bold=F) %>%
         collapse_rows(columns = 1, latex_hline = "major", valign = "middle")  %>%
             add_header_above(c(" ", " ", " ", "Formula" = 2, "Simulation" = 1, "Formula" = 2, "Simulation" = 1), escape = FALSE)  %>%
                 add_header_above(escape =FALSE, c(" ", " ", setNames(3,sigmaMsg), setNames(4,sigmaMsg2)))   %>%
-                    kable_styling(font_size = 8, latex_options = c("hold_position", "repeat_header")) %>%
+                    kable_styling(font_size = 9, latex_options = c("hold_position", "repeat_header")) %>%
                         print()
 
 
@@ -159,12 +230,12 @@ kbl(booktabs = T,
     escape = FALSE, 
     col.names = c( "$\\mu$", "r", "CE", "$\\Tau$", "EIL", "IL","$\\Tau$", "EIL", "IL"),
     caption = "Table 2: Results for setting $\\mu$ = 7.5e−5, 1.5e−4 and $\\sigma$ = 0.001 and $\\sigma$ = 0.002 for 30 days (T = 720 hours) of providing liquidity with initial price \\$1000."
-    ) %>%  kable_styling(font_size = 8) %>%
+    ) %>%  kable_styling(font_size = 9) %>%
     column_spec(1, bold=F) %>%
         collapse_rows(columns = 1, latex_hline = "major", valign = "middle")  %>%
             add_header_above(c(" ", " ", " ", "Formula" = 2, "Simulation" = 1, "Formula" = 2, "Simulation" = 1), escape = FALSE)  %>%
                 add_header_above(escape =FALSE, c(" ", " ", setNames(3,sigmaMsg), setNames(4,sigmaMsg2)))   %>%
-                    kable_styling(font_size = 8, latex_options = c("hold_position", "repeat_header")) %>%
+                    kable_styling(font_size = 9, latex_options = c("hold_position", "repeat_header")) %>%
                         print()
 
 static_expected_prices <- get_expected_prices(P, mu)
@@ -181,82 +252,8 @@ kbl( escape = F, caption = paste("Table 3: Expected price of the asset, for 7 ($
     kable_classic(full_width = F, html_font = "Cambria") %>%
       print()
 
-
-
-total_time_itm <- gbm_res
-
-position_info <- cbind(  
-    as.numeric(0),
-    as.numeric(total_time_itm)
-)
-
-df_position_info <- data.frame(position_info)
-colnames(df_position_info) <- c("Total fees", "Time (hours)")
-df_position_info <-  setNames(df_position_info, c("Total fees", "Time (hours)"))
-row.names(df_position_info) <- NULL
-
-df_position_info %>%
-kbl( caption = paste(""), booktabs = T) %>%
-    kable_styling(latex_options = "HOLD_position", position="left") %>%
-    kable_classic(full_width = F, html_font = "Cambria") %>%
-      print()
-
-
 ```
 
-\section{Plots} 
-\label{plots}
+\newpage
 
-\subsection{Stock price and impermanent loss}
-
-```{r, echo=FALSE, warning=FALSE, results='asis', out.height = '50%'}
-
-
-
-
-```
-<!-- 
-
-# Convert the matrix to Pa data frame
-df <- data.frame(time = rep(1:nrow(S), ncol(S)),
-                 value = as.vector(S),
-                 path = rep(1:ncol(S), each = nrow(S)))
-
-# Plot all the paths
-p3 <- ggplot(df, aes(x = time, y = value, color = as.factor(path))) +
-  geom_line() +
-  labs(x = "Time", y = "Value") +
-  ggtitle("GBM price paths") + 
-  theme(legend.position = "none")
-
-p3
-
-# Plot the stock price 
-par(mfrow = c(2, 1))
-
-p1 <- ggplot(data.frame(time = 1:nrow(S), value = S[, 1]), aes(x = time, y = value)) +
-  geom_line() +
-  labs(x = "Time", y = "Value") +
-  ggtitle("Price path")
-  labs(x = "",
-    y = "%") +
-  theme_minimal() +
-  theme(legend.position="bottom", axis.title=element_text(size=12,face="bold"), 
-  axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
-
-IL_v <- IL_v[-1]
-
-p2 <- ggplot(data.frame(1:length(IL_v), IL_v), aes(x=1:length(IL_v), y=IL_v)) + 
-  geom_line(color="red") + 
-  labs(x="", y="%")+ 
-  ggtitle(glue::glue("Impermanent loss")) +
-  labs(x = "",
-    y = "%") +
-  theme_minimal() +
-  theme(legend.position="bottom", axis.title=element_text(size=12,face="bold"), 
-  axis.text.x=element_blank(),
-        axis.ticks.x=element_blank()
-)
-
-p1 / p2 -->
+\printbibliography
