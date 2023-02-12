@@ -130,7 +130,7 @@ function(f, lb, ub, P, Pa, Pb, mu, sigma, T) {
 \subsection{Time in-the-money}
 \label{itimint}
 
- The two-dimensional integrals for the computation of "_time in-the-money_" (TITM) are calculated using the dblquad function from the pracma library [ref]. 
+ The two-dimensional integrals for the computation of "_time in-the-money_" ($\Tau$) are calculated using the dblquad function from the pracma library. 
 
 ```{r b, eval=FALSE}
 
