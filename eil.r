@@ -56,8 +56,10 @@ calc_eil_integrals <- function(f, P, Pa, Pb, mu, sigma, t) {
 
     integral <- integrate(
         f,
-        lower_bound, # Lower integration bound
-        upper_bound, # Upper integration bound
+        # Lower integration bound
+        lower_bound, 
+        # Upper integration bound
+        upper_bound, 
         subdivisions = 5000,
         abs.tol = 1e-5, 
         rel.tol = 1e-7,  
@@ -82,7 +84,9 @@ calc_time_ITM_integrals <- function(P, Pa, Pb, mu, sigma, T) {
 
     f <- function(x, y, mu, sigma) {
         t <- y
-        exp(-(x - (mu - (sigma^2 / 2)) * t)^2 / (2 * t * (sigma^2))) / sqrt(t)
+        first_term <- -(x - (mu - (sigma^2 / 2)) * t)^2
+        second_term <- (2 * t * (sigma^2))
+        exp(first_term / second_term) / sqrt(t)
     }
 
     integral <- dblquad(
@@ -135,7 +139,10 @@ get_simulated_last_price_avg <- function(simulated_prices) {
     avg_last_price <- 0
 
     for (i in 1:nrow(simulated_prices)) {
-        last_prices <- c(last_prices, simulated_prices[i, ncol(simulated_prices)])
+        last_prices <- c(
+            last_prices, 
+            simulated_prices[i, ncol(simulated_prices)]
+        )
     }
     
     avg_last_price <- mean(last_prices)    
@@ -194,7 +201,7 @@ calc_chunk <- function(ranges_list, mu, sigma, t) {
 
     mat_res <- matrix(ncol = 6, nrow = 6) 
     EIL_THRESHOLD <- 0.001
-    n_sim <- 10000
+    n_sim <- 1000
     V <- 5000
     P <- 1000
 
