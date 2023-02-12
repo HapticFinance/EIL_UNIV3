@@ -1,6 +1,6 @@
 # EIL research
 
-This is an implementation of the whitepaper "Concentrated Liquidity Analysis in Uniswap V3" from DeFi'22: Proceedings of the 2022 ACM CCS Workshop on Decentralized Finance and Security November 2022, pages 63–70, available at https://doi.org/10.1145/3560832.3563438 (paywalled). The code implements the analytical computation of expected impermanent loss (EIL) for Uniswap V3 and other ideas presented in the paper. It will produce a pdf with the results of the simulation.
+This is an implementation of the whitepaper "Concentrated Liquidity Analysis in Uniswap V3" from DeFi'22: Proceedings of the 2022 ACM CCS Workshop on Decentralized Finance and Security November 2022, pages 63–70, available at https://doi.org/10.1145/3560832.3563438 (paywalled). The code implements the analytical computation of expected impermanent loss (EIL) for Uniswap V3 and other ideas presented in the paper. It will produce a pdf with the results of the simulation. This work is part of the research conducted while designing the Haptic protocol.
 
 ## Requirements
 
