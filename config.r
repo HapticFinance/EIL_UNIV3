@@ -10,10 +10,10 @@ n_sim <- 25000
 # Initial price
 S0 <- 1000
 
-# volatility
+# Volatility
 sigma <- 0.001
 
-# drift
+# Drift
 mu <- 0.000075
 
 # Time
