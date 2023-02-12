@@ -32,38 +32,6 @@ calc_abs_il <- function(P, P1, Pa, Pb) {
     return(list(r = range_factor, IL = IL, expected_price = P1))
 }
 
-# ranges_list <- list(
-#     c(999, 1001),
-#     c(990, 1010),
-#     c(909, 1100),
-#     c(833.33, 1200),
-#     c(500, 2000),
-#     c(200, 5000)
-# )
-
-# for (i in 1:length(ranges_list)) {
-#     range <- ranges_list[[i]]
-#     il <- calc_abs_il(1000, 1022.98, range[1], range[2])
-#     print(il$IL)
-# }
-
-# il <- calc_abs_il(1000, 1012.68, 999, 1001)
-# il
-
-get_expected_prices <- function(P0, mu) {
-
-    static_data <- matrix(ncol = 3, nrow = 2)
-
-    static_data[1, 1] <- mu
-    static_data[1, 2] <- (P0 * exp(mu * 168))
-    static_data[1, 3] <- (P0 * exp(mu * 720))
-    static_data[2, 1] <- 2 * mu
-    static_data[2, 2] <- (P0 * exp(2 * mu * 168))
-    static_data[2, 3] <- (P0 * exp(2 * mu * 720))
-
-    return(list(data = static_data))
-}
-
 # Adapted from https://github.com/Victorletzelter/brownian_motion
 # Define a function to calculate the price at time t
 price_at_t <- function(n_paths, P0, Pa, Pb, mu, sigma, T) {
