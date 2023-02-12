@@ -173,6 +173,8 @@ function(P, Pa, Pb, mu, sigma, T) {
 \section{Simulation results} 
 \label{simres}
 
+\subsection{Results for 7 days}
+
 ```{r, echo=FALSE, warning=FALSE, results='asis'}
 
 collapse_rows_dt <- data.frame(
@@ -205,7 +207,11 @@ kbl(booktabs = T,
                     kable_styling(font_size = 9, latex_options = c("hold_position", "repeat_header")) %>%
                         print()
 
+```
 
+\subsection{Results for 30 days}
+
+```{r, echo=FALSE, warning=FALSE, results='asis'}
 collapse_rows_dt <- data.frame(
     C1 = chunk_two[1:nrow(chunk_two), 1],
     C2 = chunk_two[1:nrow(chunk_two), 2],
@@ -224,7 +230,7 @@ sigmaMsg2 <- paste("$\\\\sigma = $ ", sigma * 2, sep="")
 collapse_rows_dt %>%
 kbl(booktabs = T, 
     align = "c", 
-    longtable = T, 
+    longtable = T,
     escape = FALSE, 
     col.names = c( "$\\mu$", "r", "CE", "$\\Tau$", "EIL", "IL","$\\Tau$", "EIL", "IL"),
     caption = "Table 2: Results for setting $\\mu$ = 7.5e−5, 1.5e−4 and $\\sigma$ = 0.001 and $\\sigma$ = 0.002 for 30 days (T = 720 hours) of providing liquidity with initial price \\$1000."
