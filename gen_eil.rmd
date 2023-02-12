@@ -57,6 +57,7 @@ options(scipen=999) # avoid scientific notation
 
 path = getwd()
 source(paste(path, "/sim.r", sep=""))
+source(paste(path, "/static.r", sep=""))
 
 t = 168
 p = 1000
@@ -99,8 +100,8 @@ real_volume_vector <- values[[9]]
 S <- values[[10]]
 gbm_res <- values[[11]]
 
-chunk_one <- run_calc(mu, 168) 
-chunk_two <- run_calc(mu, 720) 
+chunk_one <- run_calc(mu, sigma, 168) 
+chunk_two <- run_calc(mu, sigma,  720) 
 
 ```
 \newpage
@@ -119,8 +120,7 @@ collapse_rows_dt <- data.frame(
     C6 = chunk_one[1:nrow(chunk_one), 6],
     C7 = chunk_one[1:nrow(chunk_one), 7],
     C8 = chunk_one[1:nrow(chunk_one), 8],
-    C9 = chunk_one[1:nrow(chunk_one), 9],
-    C10 = chunk_one[1:nrow(chunk_one), 10]
+    C9 = chunk_one[1:nrow(chunk_one), 9]
 )
 
 sigmaMsg <- paste("$\\\\sigma = $ ", sigma, sep="")
@@ -131,15 +131,16 @@ kbl(booktabs = T,
     align = "c", 
     longtable = T, 
     escape = FALSE, 
-    col.names = c( "$\\mu$", "r", "$\\Tau$", "EIL", "EFX", "EFY", "$\\Tau$", "EIL", "EFX", "EFY"),
+    col.names = c( "$\\mu$", "r", "CE", "$\\Tau$", "EIL", "IL","$\\Tau$", "EIL", "IL"),
     caption = "Table 1: Results for setting $\\mu$ = 7.5e−5, 1.5e−4 and $\\sigma$ = 0.001 and $\\sigma$ = 0.002 for 7 days (T = 168 hours) of providing liquidity with initial price \\$1000."
     ) %>%  kable_styling(font_size = 8) %>%
     column_spec(1, bold=F) %>%
         collapse_rows(columns = 1, latex_hline = "major", valign = "middle")  %>%
-            add_header_above(c(" ", " ", "Formula" = 4, "Formula" = 4), escape = FALSE)  %>%
-                add_header_above(escape =FALSE, c(" ", setNames(5,sigmaMsg), setNames(4,sigmaMsg2)))   %>%
+            add_header_above(c(" ", " ", " ", "Formula" = 2, " ", "Formula" = 2, " "), escape = FALSE)  %>%
+                add_header_above(escape =FALSE, c(" ", " ", setNames(3,sigmaMsg), setNames(4,sigmaMsg2)))   %>%
                     kable_styling(font_size = 8, latex_options = c("hold_position", "repeat_header")) %>%
                         print()
+
 
 collapse_rows_dt <- data.frame(
     C1 = chunk_two[1:nrow(chunk_two), 1],
@@ -150,8 +151,7 @@ collapse_rows_dt <- data.frame(
     C6 = chunk_two[1:nrow(chunk_two), 6],
     C7 = chunk_two[1:nrow(chunk_two), 7],
     C8 = chunk_two[1:nrow(chunk_two), 8],
-    C9 = chunk_two[1:nrow(chunk_two), 9],
-    C10 = chunk_two[1:nrow(chunk_two), 10]
+    C9 = chunk_two[1:nrow(chunk_two), 9]
 )
 
 
@@ -164,15 +164,31 @@ kbl(booktabs = T,
     align = "c", 
     longtable = T, 
     escape = FALSE, 
-    col.names = c( "$\\mu$", "r", "$\\Tau$", "EIL", "EFX", "EFY", "$\\Tau$", "EIL", "EFX", "EFY"),
+    col.names = c( "$\\mu$", "r", "CE", "$\\Tau$", "EIL", "IL","$\\Tau$", "EIL", "IL"),
     caption = "Table 2: Results for setting $\\mu$ = 7.5e−5, 1.5e−4 and $\\sigma$ = 0.001 and $\\sigma$ = 0.002 for 30 days (T = 720 hours) of providing liquidity with initial price \\$1000."
     ) %>%  kable_styling(font_size = 8) %>%
     column_spec(1, bold=F) %>%
         collapse_rows(columns = 1, latex_hline = "major", valign = "middle")  %>%
-            add_header_above(c(" ", " ", "Formula" = 4, "Formula" = 4), escape = FALSE)  %>%
-                add_header_above(escape =FALSE, c(" ", setNames(5,sigmaMsg), setNames(4,sigmaMsg2)))   %>%
+            add_header_above(c(" ", " ", " ", "Formula" = 2, " ", "Formula" = 2, " "), escape = FALSE)  %>%
+                add_header_above(escape =FALSE, c(" ", " ", setNames(3,sigmaMsg), setNames(4,sigmaMsg2)))   %>%
                     kable_styling(font_size = 8, latex_options = c("hold_position", "repeat_header")) %>%
                         print()
+
+static_expected_prices <- get_expected_prices(p, mu)
+data <- static_expected_prices$data
+
+df_expected_prices <- data.frame(data)
+colnames(df_expected_prices) <- c("$\\mu$", "$\\Tau$ = 168", "$\\Tau$ = 720")
+df_expected_prices <-  setNames(df_expected_prices, c("$\\mu$", "$\\Tau$ = 168", "$\\Tau$ = 720"))
+row.names(df_expected_prices) <- NULL
+
+df_expected_prices %>%
+kbl( escape = F, caption = paste("Table 3: Expected price of the asset, for 7 ($\\Tau$ = 168 hours) and 30 days ($\\Tau$ = 720 hours)."), booktabs = T) %>%
+    kable_styling(latex_options = "HOLD_position", position="left") %>%
+    kable_classic(full_width = F, html_font = "Cambria") %>%
+      print()
+
+
 
 total_fees <- gbm_res[1, 1]
 total_time_itm <- gbm_res[1, 2]

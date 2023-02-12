@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 path = getwd()
 source(paste(path, "/install.r", sep=""))
+source(paste(path, "/static.r", sep=""))
 
 psi_below_pa <- function(x, t, P, Pa, Pb, mu, sigma) {
 
@@ -101,6 +102,25 @@ calc_time_ITM_integrals <- function(P, Pa, Pb, mu, sigma, T) {
     return(result)
 }
 
+
+calc_liquidity <- function(V, P, Pa, Pb) {
+
+    res <- V / ((2 * sqrt(P)) - (P / sqrt(Pb)) - sqrt(Pa))
+
+    return(res)
+}
+
+calc_fees_instant_token_x <- function(V, P, Pa, Pb, mu, sigma, t) {
+
+    phi <- 0.003
+    time_ITM <- calc_time_ITM_integrals(P, Pa, Pb, mu, sigma, t)
+    alpha <- calc_alpha(mu, sigma, 1)
+    L <- calc_liquidity(V, (P * exp(mu * t)), Pa, Pb)
+    res <- (phi / (1 - phi)) * (L / (2 * sqrt((P * exp(mu * t))))) * alpha
+    
+    return(res)
+}
+
 calc_eil <- function(P, Pa, Pb, mu, sigma, t) {
 
     integral_below_pa <- calc_eil_integrals(psi_below_pa, P, Pa, Pb, mu, sigma, t)
@@ -110,6 +130,7 @@ calc_eil <- function(P, Pa, Pb, mu, sigma, t) {
 
     return(expected_IL)
 }
+
 
 calc_expected_total_fees_x <- function(V, P, Pa, Pb, mu, phi, t, dt, alpha) {
 
@@ -129,12 +150,9 @@ calc_expected_total_fees_y <- function(V, P, Pa, Pb, mu, phi, t, dt, beta) {
 
 calc_alpha <- function(mu, sigma, dt) {
 
-    first_term <- exp((1 / 8) * (3 * sigma^2 - 4 * mu) * dt)
-    second_term <- (erf(((sigma^2 - mu) * sqrt(dt)) / sqrt(2) * sigma) + 1) 
-    third_term <- -(1 / 2) * erfc(((mu - (sigma^2 / 2)) * sqrt(dt)) / (sqrt(2) * sigma))
-    res <- first_term * second_term - third_term
+    alpha <- exp(1/8 * ((3 * sigma^2) - (4 * mu))) * dt * ((erf(((sigma^2 - mu) * sqrt(dt)) / (sqrt(2) * sigma)) + 1)) - 1/2 * erfc(((mu - sigma^2/2) * sqrt(dt)) / (sqrt(2) * sigma))
 
-    return(res)
+    return(alpha)
 }
 
 calc_beta <- function(mu, sigma, dt) {
@@ -154,72 +172,77 @@ calc_capital_efficiency_simplified <- function(r) {
     return(CE)
 }
 
+compute_row_data <- function(
+    V, 
+    P, 
+    Pa, 
+    Pb, 
+    mu, 
+    sigma, 
+    t, 
+    results, 
+    full_sim = TRUE
+) {
 
-compute_row_data <- function(V, P, Pa, Pb, mu, sigma, t) {
+    # predicted_prices <- results$pred
+    simulated_prices <- results$gbms
+    last_prices <- c()
+
+    for (i in 1:nrow(simulated_prices)) {
+        last_prices <- c(last_prices, simulated_prices[i, ncol(simulated_prices)])
+    }
+
+    mean_last_prices <- mean(last_prices)
 
     EIL <- calc_eil(P, Pa, Pb, mu, sigma, t)
     time_ITM <- calc_time_ITM_integrals(P, Pa, Pb, mu, sigma, t)
-    alpha <- calc_alpha(mu, sigma, time_ITM)
-    fees_x <- calc_expected_total_fees_x(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, alpha)
-    beta <- calc_beta(mu, sigma, time_ITM)
-    fees_y <- calc_expected_total_fees_y(V, P, Pa, Pb, mu, 0.003, time_ITM, t * 10, beta)
+    data <- calc_abs_il(P, mean_last_prices, Pa, Pb)
+    IL <- data$IL
 
-    return(list(EIL, time_ITM, fees_x,  fees_y))
+    print(glue::glue("calc EIL for mu = {mu} sigma = {sigma} t={t} result = {EIL}"))
+
+    return(list(EIL, time_ITM, IL)) 
 }
 
-calc_chunk <- function(ranges_list, mu, t) {
+calc_chunk <- function(ranges_list, mu, sigma, t) {
 
-        mat_res <- matrix(ncol = 10, nrow = 6) 
+    mat_res <- matrix(ncol = 6, nrow = 6) 
+
+    EIL_THRESHOLD <- 0.001
+    V <- 5000
+    P <- 1000
+
+    ranges <- ranges_list
+    res <- price_at_t(5000, P, Pa, Pb, mu, sigma, t)
+
+    for (i in 1:length(ranges_list)) {
+
+        active_range <- ranges[[i]]
         
-        EIL_THRESHOLD <- 0.0001
+        Pa <- active_range[1]
+        Pb <- active_range[2]
 
-        V <- 5000
-        P <- 1000
+        range_factor <- sqrt(Pb / Pa)
+        capital_efficiency <- sqrt(range_factor) / (sqrt(range_factor) - 1)
+        results <- compute_row_data(V, P, Pa, Pb, mu, sigma, t, res)
 
-        ranges <- ranges_list
+        EIL <- results[[1]]
+        time_ITM <- results[[2]]
+        IL <- results[[3]]
 
-        for (i in 1:length(ranges_list)) {
+        mat_res[i, 1] <- formatC(mu, format = "e", digits = 2)
+        mat_res[i, 2] <- formatC(range_factor, digits = 3, format = "f")
+        mat_res[i, 3] <- formatC(capital_efficiency, digits = 0, format = "f")
+        mat_res[i, 4] <- formatC(time_ITM, digits = 2, format = "f")
+        mat_res[i, 5] <- ifelse((-1 * EIL) < EIL_THRESHOLD, formatC(EIL, format = "e", digits = 2) , formatC(EIL, format = "f", digits = 4))
+        mat_res[i, 6] <- formatC(IL, digits = 4, format = "f")
+   
+    }
 
-            active_range <- ranges[[i]]
-
-            Pa <- active_range[1]
-            Pb <- active_range[2]
-            range_factor <- sqrt(Pb / Pa)
-            
-            sigma <- 0.001
-            results <- compute_row_data(V, P, Pa, Pb, mu, sigma, t)
-
-            EIL <- results[[1]]
-            time_ITM <- results[[2]]
-            fees_x <- results[[3]]
-            fees_y <- results[[4]]
-
-            mat_res[i, 1] <- formatC(mu, format = "e", digits = 2)
-            mat_res[i, 2] <- formatC(range_factor, digits = 3, format = "f")
-            mat_res[i, 3] <- formatC(time_ITM, digits = 2, format = "f")
-            mat_res[i, 4] <- ifelse((-1 * EIL) < EIL_THRESHOLD, formatC(EIL, format = "e", digits = 2) , formatC(EIL, format = "f", digits = 5))
-            mat_res[i, 5] <- formatC(fees_x, digits = 4, format = "f")
-            mat_res[i, 6] <- format(fees_y, nsmall = 4, format = "f")
-
-            sigma <- sigma * 2
-            results <- compute_row_data(V, P, Pa, Pb, mu, sigma, t)
-            
-            EIL <- results[[1]]
-            time_ITM <- results[[2]]
-            fees_x <- results[[3]]
-            fees_y <- results[[4]]
-
-            mat_res[i, 7] <- formatC(time_ITM, digits = 2, format = "f")
-            mat_res[i, 8] <- ifelse((-1 * EIL) < EIL_THRESHOLD, formatC(EIL, format = "e", digits = 2) , formatC(EIL , format = "f", digits = 5))
-            mat_res[i, 9] <- formatC(fees_x, digits = 4, format = "f")
-            mat_res[i, 10] <-format(fees_y, nsmall = 4, format = "f")
-
-        }
-
-        return(mat_res)
+    return(mat_res)
 }
 
-run_calc <- function(mu, t) {
+run_calc <- function(mu, sigma, t) {
 
     ranges_list <- list(
         c(999, 1001),
@@ -232,12 +255,16 @@ run_calc <- function(mu, t) {
 
     tryCatch({
         
-        first_chunk <- calc_chunk(ranges_list, mu, t)
-        second_chunk <- calc_chunk(ranges_list, mu * 2, t)
+        first_chunk <- calc_chunk(ranges_list, mu, sigma, t)
+        second_chunk <- calc_chunk(ranges_list, mu, sigma * 2, t)
 
-        combined <- rbind(first_chunk, second_chunk)
+        combined_by_col_1st_chunk <- cbind(first_chunk, second_chunk[, 4:ncol(second_chunk)])
 
-        prmatrix(combined)
+        third_chunk <- calc_chunk(ranges_list, mu * 2, sigma, t)
+        fourth_chunk <- calc_chunk(ranges_list, mu * 2, sigma * 2, t)
+
+        combined_by_col_2nd_chunk <- cbind(third_chunk, fourth_chunk[, 4:ncol(fourth_chunk)])
+        combined <- rbind(combined_by_col_1st_chunk, combined_by_col_2nd_chunk)
 
         return(combined)
     }, error = function(e) {
@@ -250,3 +277,4 @@ run_calc <- function(mu, t) {
     })
 }
  
+# run_calc(0.000075, 0.001, 168)
