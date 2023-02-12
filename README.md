@@ -19,7 +19,7 @@ This work is part of the research conducted while designing the Haptic protocol.
 - Check that gen_pdf has executable permissions and grant them with `chmod +x gen_eil.r`
 - Run `./gen_eil_report.r`
 
-Pdf will be generated in the pdf folder. The simulation parameters can be found in the `config.r` file.
+The necessary dependencies will be installed and a pdf file will be generated in the `pdf/` folder. The simulation parameters can be found in the `config.r` file.
 
 # References
 
