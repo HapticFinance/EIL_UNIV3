@@ -1,6 +1,6 @@
 # EIL research
 
-This is an implementation of the whitepaper "Concentrated Liquidity Analysis in Uniswap V3" [1] (paywalled). The code implements the analytical computation of expected impermanent loss (EIL) for Uniswap V3 and other ideas presented in the paper. It will produce a pdf with the results of the simulation. This work is part of the research conducted while designing the Haptic protocol.
+This is an implementation of the whitepaper "Concentrated Liquidity Analysis in Uniswap V3" [1]. The code implements the analytical computation of expected impermanent loss (EIL) for Uniswap V3 and other ideas presented in the paper. It will produce a pdf with the results of the simulation. This work is part of the research conducted while designing the Haptic protocol.
 
 ## Requirements
 
