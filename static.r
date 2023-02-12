@@ -2,7 +2,7 @@
 path = getwd()
 source(paste(path, "/install.r", sep=""))
 source(paste(path, "/gbm.r", sep=""))
-set.seed(3)
+set.seed(2)
 
 calc_abs_il <- function(P, P1, Pa, Pb) {
 
@@ -43,7 +43,7 @@ calc_abs_il <- function(P, P1, Pa, Pb) {
 
 # for (i in 1:length(ranges_list)) {
 #     range <- ranges_list[[i]]
-#     il <- calc_abs_il(1000, 1024.98, range[1], range[2])
+#     il <- calc_abs_il(1000, 1022.98, range[1], range[2])
 #     print(il$IL)
 # }
 
@@ -66,9 +66,8 @@ get_expected_prices <- function(P0, mu) {
 
 # Adapted from https://github.com/Victorletzelter/brownian_motion
 # Define a function to calculate the price at time t
-price_at_t <- function(n_paths, P0, Pa, Pb, mu, sigma, t) {
+price_at_t <- function(n_paths, P0, Pa, Pb, mu, sigma, T) {
 
-    T <- t
     Bo = 0
     t = seq(0, T, by = 0.1)
     gbms = matrix(0, nrow = n_paths, ncol = length(t))

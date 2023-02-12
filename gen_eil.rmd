@@ -60,45 +60,40 @@ source(paste(path, "/sim.r", sep=""))
 source(paste(path, "/static.r", sep=""))
 
 t = 168
-p = 1000
-a = 999
-b = 1001
+P = 1000
+Pa = 999
+Pb = 1001
 x = 2
-y = x * p
+y = x * P
 mu = 0.000075
 sigma = 0.001
 
-in_range <- (a <= p && b >= p)
+in_range <- (Pa <= P && Pb >= P)
 
-if (a > p && !in_range) {
+if (Pa > P && !in_range) {
   # single asset liquidity
   y = 0
-} else if (a < p && !in_range) {
+} else if (Pa < P && !in_range) {
   # single asset liquidity
   x = 0
 } else if (in_range) {
   # dual asset liquidity
-  sp = p ** 0.5
-  sa = a ** 0.5
-  sb = b ** 0.5
+  sp = P ** 0.5
+  sa = Pa ** 0.5
+  sb = Pb ** 0.5
   L = get_liquidity_0(x, sp, sb)
   y = calculate_y(L, sp, sa, sb)
 } 
 
-values <- run_sim(p, a, b, x, y, t, mu, sigma)
-rangeFactor <- sqrt(b / a)
+values <- run_sim(P, Pa, Pb, x, y, t, mu, sigma)
+rangeFactor <- sqrt(Pb / Pa)
 
 IL_v <- values[[1]]
-priceChanges <- values[[2]]
-IV_vector <-  values[[3]]
-price_vector <-  values[[4]]
-intervals_in_range <- values[[5]]
-cum_premium <- values[[6]]
-lvr_vector <- values[[7]]
-daily_volatility_vector <- values[[8]]
-real_volume_vector <- values[[9]]
-S <- values[[10]]
-gbm_res <- values[[11]]
+lvr_vector <- values[[2]]
+daily_volatility_vector <- values[[3]]
+real_volume_vector <- values[[4]]
+S <- values[[5]]
+gbm_res <- values[[6]]
 
 chunk_one <- run_calc(mu, sigma, 168) 
 chunk_two <- run_calc(mu, sigma,  720) 
@@ -136,7 +131,7 @@ kbl(booktabs = T,
     ) %>%  kable_styling(font_size = 8) %>%
     column_spec(1, bold=F) %>%
         collapse_rows(columns = 1, latex_hline = "major", valign = "middle")  %>%
-            add_header_above(c(" ", " ", " ", "Formula" = 2, " ", "Formula" = 2, " "), escape = FALSE)  %>%
+            add_header_above(c(" ", " ", " ", "Formula" = 2, "Simulation" = 1, "Formula" = 2, "Simulation" = 1), escape = FALSE)  %>%
                 add_header_above(escape =FALSE, c(" ", " ", setNames(3,sigmaMsg), setNames(4,sigmaMsg2)))   %>%
                     kable_styling(font_size = 8, latex_options = c("hold_position", "repeat_header")) %>%
                         print()
@@ -154,8 +149,6 @@ collapse_rows_dt <- data.frame(
     C9 = chunk_two[1:nrow(chunk_two), 9]
 )
 
-
-
 sigmaMsg <- paste("$\\\\sigma = $ ", sigma, sep="")
 sigmaMsg2 <- paste("$\\\\sigma = $ ", 0.002, sep="")
 
@@ -169,12 +162,12 @@ kbl(booktabs = T,
     ) %>%  kable_styling(font_size = 8) %>%
     column_spec(1, bold=F) %>%
         collapse_rows(columns = 1, latex_hline = "major", valign = "middle")  %>%
-            add_header_above(c(" ", " ", " ", "Formula" = 2, " ", "Formula" = 2, " "), escape = FALSE)  %>%
+            add_header_above(c(" ", " ", " ", "Formula" = 2, "Simulation" = 1, "Formula" = 2, "Simulation" = 1), escape = FALSE)  %>%
                 add_header_above(escape =FALSE, c(" ", " ", setNames(3,sigmaMsg), setNames(4,sigmaMsg2)))   %>%
                     kable_styling(font_size = 8, latex_options = c("hold_position", "repeat_header")) %>%
                         print()
 
-static_expected_prices <- get_expected_prices(p, mu)
+static_expected_prices <- get_expected_prices(P, mu)
 data <- static_expected_prices$data
 
 df_expected_prices <- data.frame(data)
@@ -190,11 +183,10 @@ kbl( escape = F, caption = paste("Table 3: Expected price of the asset, for 7 ($
 
 
 
-total_fees <- gbm_res[1, 1]
-total_time_itm <- gbm_res[1, 2]
+total_time_itm <- gbm_res
 
 position_info <- cbind(  
-    as.numeric(total_fees),
+    as.numeric(0),
     as.numeric(total_time_itm)
 )
 
@@ -218,6 +210,26 @@ kbl( caption = paste(""), booktabs = T) %>%
 \subsection{Stock price and impermanent loss}
 
 ```{r, echo=FALSE, warning=FALSE, results='asis', out.height = '50%'}
+
+
+
+
+```
+<!-- 
+
+# Convert the matrix to Pa data frame
+df <- data.frame(time = rep(1:nrow(S), ncol(S)),
+                 value = as.vector(S),
+                 path = rep(1:ncol(S), each = nrow(S)))
+
+# Plot all the paths
+p3 <- ggplot(df, aes(x = time, y = value, color = as.factor(path))) +
+  geom_line() +
+  labs(x = "Time", y = "Value") +
+  ggtitle("GBM price paths") + 
+  theme(legend.position = "none")
+
+p3
 
 # Plot the stock price 
 par(mfrow = c(2, 1))
@@ -247,19 +259,4 @@ p2 <- ggplot(data.frame(1:length(IL_v), IL_v), aes(x=1:length(IL_v), y=IL_v)) +
         axis.ticks.x=element_blank()
 )
 
-p1 / p2
-
-# Convert the matrix to a data frame
-df <- data.frame(time = rep(1:nrow(S), ncol(S)),
-                 value = as.vector(S),
-                 path = rep(1:ncol(S), each = nrow(S)))
-
-# Plot all the paths
-p3 <- ggplot(df, aes(x = time, y = value, color = as.factor(path))) +
-  geom_line() +
-  labs(x = "Time", y = "Value") +
-  ggtitle("GBM price paths") + 
-  theme(legend.position = "none")
-
-p3
-```
+p1 / p2 -->
