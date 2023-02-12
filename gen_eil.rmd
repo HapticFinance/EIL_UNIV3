@@ -13,8 +13,8 @@ output:
       toc: true
       number_sections: true
       toc_depth: 2
-      keep_md: true
-      keep_tex: true
+      keep_md: false
+      keep_tex: false
       template: NULL
       #pandoc_args: [
       #  --template=extras/haptic_template.tex
