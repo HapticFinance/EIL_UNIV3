@@ -77,9 +77,24 @@ chunk_two <- run_calc(mu, sigma,  T * 2)
 
 \section{Introduction}
 
-Impermament loss (IL) or divergence-loss, is a phenomena experienced by LP providers on almost all types of AMM platforms, especially for non-mean reverting assets. This phenomena has been studied extensively because of its negative impact on LP providers' returns \cite{LOE} \cite{DZ}. When modelling an asset's price with a geometric brownian motion (GBM), IL can be estimated numerically by using iterative techniques such as the Monte Carlo method. The result of this estimation is referred to as "expected impermanent loss" (EIL). Previous work wrongly concluded that the computation of EIL for Uniswap v3 positions is analytically intractable, due to the complexity of the math expressions involving the GBM \cite{GSL}. However, a recent paper provided formulas for the analytical computation of EIL for Uniswap v3 positions \cite{CV3}. We implement the ideas presented in the paper and compare the results with the results obtained from the Monte Carlo simulation.
+Impermament loss (IL) or divergence-loss, is a phenomena experienced by LP providers on almost all types of AMM platforms, especially when providing liquidity for non-mean reverting assets. This phenomena has been studied extensively because of its negative impact on LP providers' returns \cite{LOE} \cite{DZ}. When modelling an asset's price with a geometric brownian motion (GBM), IL can be estimated numerically by using iterative techniques such as the Monte Carlo method. The result of this estimation is referred to as "expected impermanent loss" (EIL). Previous work wrongly concluded that the computation of EIL for Uniswap v3 positions is analytically intractable, due to the complexity of the math expressions involving the GBM \cite{GSL}. However, a recent paper provided a framework for the analytical computation of EIL for Uniswap v3 positions \cite{CV3}. We implement the ideas presented in the paper and compare the results with the results obtained from the Monte Carlo simulation.
+
+\subsection{Simulation starting parameters}
+\label{simpar}
+
+  - Number of simulations: `r n_sim` 
+  - Total time: `r T` (Hours)
+  - Initial price: `r S0` (Units of numeraire asset)
+  - Mean: `r mu`
+  - Standard deviation: `r sigma`
+
+\newpage
 
 \section{Technical details}
+
+\subsection{Expected IL}
+\label{eilint}
+
 The integrals in the analytical computation of EIL are calculated using the "_integrate_" R function, which is based on QUADPACK routines dqags and dqagi by R. Piessens and E. deDoncker–Kapenga \cite{PIE}.
 
 ```{r a, eval=FALSE}
@@ -112,7 +127,10 @@ function(f, lb, ub, P, Pa, Pb, mu, sigma, T) {
 
 \newpage
 
- The two-dimensional integrals for the computation of "_time in the money_" are calculated using the dblquad function from the pracma library [ref]. 
+\subsection{Time in-the-money}
+\label{itimint}
+
+ The two-dimensional integrals for the computation of "_time in-the-money_" (TITM) are calculated using the dblquad function from the pracma library [ref]. 
 
 ```{r b, eval=FALSE}
 
