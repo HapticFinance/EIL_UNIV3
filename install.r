@@ -1,45 +1,11 @@
 # Package names
 packages <- c(
-  "deSolve",
-  "foreach",
-  "xts",
-  "ggplot2",
+  "rmarkdown",
   "pracma",
-  "contfrac",
-  "stats",
-  "R.matlab",
-  "writexl",
-  "dplyr",
-  "rbenchmark",
-  "data.table",
-  "tictoc",
-  "NCmisc",
-  "sysid",
-  "minpack.lm",
-  "rugarch",
   "kableExtra",
-  "patchwork",
-  "httr",
-  "purrr",
-  "ghql",
-  "jsonlite",
-  "xts",
-  "tidyverse",
-  "cubature",
-  "LSMRealOptions"
+  "ggplot2",
+  "tictoc"
 )
-
-#install.packages("/data/code/BSC/Haptic/haptic_poc/NORMT3", repos=NULL,  type="source")
-#devtools::install_github("jessevent/crypto")
-#devtools::install_github("deanfantazzini/bitcoinFinance")
-# devtools::install_github("https://github.com/cran/somebm.git", force=TRUE)
-
-# for (i in 1:length(c)) {
-#  install.packages(packages[i])
-# }
-# suppressPackageStartupMessages(library(plyr))
-
-# webshot::install_phantomjs()
 
 # Install packages not yet installed
 installed_packages <- packages %in% rownames(installed.packages())
