@@ -2,7 +2,7 @@
 path = getwd()
 source(paste(path, "/install.r", sep=""))
 
-# Initial parameters
+# Initial parioameters
 
 # Number of simulations
 n_sim <- 25000
