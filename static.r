@@ -1,7 +1,6 @@
 #!/usr/bin/env Rscript
 path = getwd()
 source(paste(path, "/install.r", sep=""))
-source(paste(path, "/gbm.r", sep=""))
 set.seed(2)
 
 calc_abs_il <- function(P, P1, Pa, Pb) {

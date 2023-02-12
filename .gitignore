@@ -2,3 +2,4 @@
 *.pdf
 *.tex
 sim.r
+gbm.r
