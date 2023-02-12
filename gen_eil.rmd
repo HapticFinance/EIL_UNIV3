@@ -149,9 +149,9 @@ function(P, Pa, Pb, mu, sigma, T) {
     integral <- dblquad(
         f,
         # Lower integration bound 
-        log(Pa/P), 
+        log(Pa / P), 
         # Upper integration bound
-        log(Pb/P), 
+        log(Pb / P), 
         0, 
         T,
         tol=1e-5,
