@@ -2,10 +2,10 @@
 path = getwd()
 source(paste(path, "/install.r", sep=""))
 
-# Initial parameters
+# Initial parameters (Define the initial parameters for the simulation)
 
 # Number of simulations
-n_sim <- 50000
+n_sim <- 10000
 
 # Initial price
 S0 <- 1000
@@ -19,10 +19,10 @@ mu <- 0.000075
 # Time
 T <- 168
 
-# EIL threshold
+# EIL threshold (below this value, scientific notation is used)
 EIL_THRESHOLD <- 0.001
 
-# Total value of LP position in the numeraire token (e.g. DAI)
+# Total value of LP position in the numéraire token (e.g. DAI)
 V <- 5000
 
 # Liquidity ranges

@@ -77,9 +77,9 @@ chunk_two <- run_calc(mu, sigma,  T * 2)
 
 \section{Introduction}
 
-Impermament loss (IL) or divergence-loss, is a phenomena experienced by LP providers on almost all types of AMM platforms, especially when providing liquidity for non-mean reverting assets. This phenomena has been studied extensively because of its negative impact on LP providers' returns \cite{LOE} \cite{DZ}. When modelling an asset's price with a geometric brownian motion (GBM), IL can be estimated numerically by using iterative techniques such as the Monte Carlo method. The result of this estimation is referred to as "expected impermanent loss" (EIL). Previous work wrongly concluded that the computation of EIL for Uniswap v3 positions is analytically intractable, due to the complexity of the math expressions involving the GBM \cite{GSL}. However, a recent paper provided a framework for the analytical computation of EIL for Uniswap v3 positions \cite{CV3}. We implement the ideas presented in the paper and compare the results with the results obtained from the Monte Carlo simulation.
+Impermament loss (IL) or divergence-loss, is a phenomena experienced by LP providers on almost all types of AMM platforms, especially when providing liquidity for non-mean reverting assets. The effects of IL have been studied extensively because of their negative impact on LP providers' returns \cite{LOE} \cite{DZ}. When modelling an asset's price with a geometric brownian motion (GBM), IL can be estimated numerically by using iterative techniques such as the Monte Carlo method. The result of this estimation is referred to as "expected impermanent loss" (EIL). Previous work wrongly concluded that the computation of EIL for Uniswap v3 positions is analytically intractable, due to the complexity of the math expressions involving the GBM \cite{GSL}. However, a recent paper provided a framework for the analytical computation of EIL for Uniswap v3 positions \cite{CV3}. We implement the ideas presented in the paper and compare the results with the results obtained from the Monte Carlo simulation.
 
-\subsection{Simulation starting parameters}
+\subsection{Simulation parameters}
 \label{simpar}
 
   - Number of simulations: `r n_sim` 
@@ -173,7 +173,7 @@ function(P, Pa, Pb, mu, sigma, T) {
 \section{Simulation results} 
 \label{simres}
 
-\subsection{Results for 7 days}
+\subsection{168 hours (7 days)}
 
 ```{r, echo=FALSE, warning=FALSE, results='asis'}
 
@@ -209,7 +209,7 @@ kbl(booktabs = T,
 
 ```
 
-\subsection{Results for 30 days}
+\subsection{7200 hours (30 days)}
 
 ```{r, echo=FALSE, warning=FALSE, results='asis'}
 collapse_rows_dt <- data.frame(
@@ -257,6 +257,10 @@ kbl( escape = F, caption = paste("Table 3: Expected price of the asset, for 7 ($
       print()
 
 ```
+\section{Conclusion}
+\label{conclusion}
+
+\lipsum[3-10]
 
 \newpage
 
