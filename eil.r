@@ -200,7 +200,7 @@ compute_row_data <- function(
 
 calc_chunk <- function(ranges_list, mu, sigma, t) {
 
-    mat_res <- matrix(ncol = 6, nrow = 6) 
+    mat_res <- matrix(ncol = length(ranges), nrow = length(ranges)) 
     P <- S0
 
     ranges <- ranges_list
