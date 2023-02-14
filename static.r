@@ -73,36 +73,8 @@ price_at_t <- function(n_paths, P0, Pa, Pb, mu, sigma, T) {
     return(list(gbms = gbms, pred = pred, IL_v = c()))
 }
 
-# Define a function to simulate stock prices using the Heston model
-price_at_t_heston <- function(n_paths, P0, mu, sigma, T, v0, kappa, theta, sigma_v, rho) {
-
-  # Set up the time grid
-  dt <- 0.1
-  n_steps <- round(T / dt)
-  t <- seq(0, T, by = dt)
-
-  # Simulate the Brownian motion components
-  dW1 <- matrix(rnorm(n_paths * n_steps), nrow = n_paths, ncol = n_steps)
-  dW2 <- matrix(rnorm(n_paths * n_steps), nrow = n_paths, ncol = n_steps)
-  W1 <- apply(dW1, 1, cumsum)
-  W2 <- apply(dW2, 1, cumsum)
-
-  # Simulate the stock price paths
-  stock_price_simulations <- matrix(0, nrow = n_paths, ncol = n_steps + 1)
-  stock_price_simulations[, 1] <- P0
-
-  for (i in 1:n_paths) {
-    for (j in 2:(n_steps + 1)) {
-      v <- max(0, v0 + kappa * (theta - v0) * dt + sigma_v * sqrt(v0 * dt) * dW1[i, j - 1])
-      stock_price_simulations[i, j] <- stock_price_simulations[i, j - 1] * exp((mu - v / 2) * dt + sqrt(v * dt) * (rho * dW1[i, j - 1] + sqrt(1 - rho^2) * dW2[i, j - 1]))
-    }
-  }
-
-  return(list(gbms = stock_price_simulations, pred = P0 * exp(mu * t), IL_v = c()))
-}
-
 # Define a function to simulate stock prices using the Heston model with a drift term for the volatility process
-price_at_t_heston_drift <- function(n_paths, P0, mu, sigma, T, v0, kappa, theta, sigma_v, rho, xi) {
+price_at_t_heston <- function(n_paths, P0, mu, sigma, T, v0, kappa, theta, sigma_v, rho) {
 
   # Set up the time grid
   dt <- 0.1
@@ -127,14 +99,14 @@ price_at_t_heston_drift <- function(n_paths, P0, mu, sigma, T, v0, kappa, theta,
   for (i in 1:n_paths) {
     for (j in 2:(n_steps + 1)) {
       v <- volatility_simulations[i, j - 1]
-      dZv <- xi * (theta - v) * dt + sigma_v * sqrt(v * dt) * dZ[i, j - 1]
+      dZv <- sigma * (theta - v) * dt + sigma_v * sqrt(v * dt) * dZ[i, j - 1]
       v <- max(0, v + kappa * (theta - v) * dt + sigma_v * sqrt(v * dt) * dW1[i, j - 1] + dZv)
       volatility_simulations[i, j] <- v
       stock_price_simulations[i, j] <- stock_price_simulations[i, j - 1] * exp((mu - v / 2) * dt + sqrt(v * dt) * (rho * dW1[i, j - 1] + sqrt(1 - rho^2) * dW2[i, j - 1]))
     }
   }
 
-  return(list(gbms = stock_price_simulations, pred = P0 * exp(mu * t), IL_v = volatility_simulations))
+  return(list(gbms = stock_price_simulations, pred = NA, IL_v = volatility_simulations))
 }
 
 # Random number Box–Muller transform

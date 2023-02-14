@@ -204,8 +204,7 @@ calc_chunk <- function(ranges_list, mu, sigma, t) {
     P <- S0
 
     ranges <- ranges_list
-    #res <- price_at_t(n_sim, P, Pa, Pb, mu, sigma, t)
-    res <- price_at_t_heston_drift(100, 1000, mu, sigma, t, 0.04, 1, 0.04, 0.2, -0.5, 0.2)
+    res <- price_at_t_heston(n_sim, 1000, mu, sigma, t, v0, kappa, theta, sigma_v, rho)
 
     for (i in 1:length(ranges_list)) {
 
