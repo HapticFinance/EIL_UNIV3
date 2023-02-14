@@ -47,7 +47,7 @@ get_expected_prices <- function(P0, mu) {
 
 # Adapted from https://github.com/Victorletzelter/brownian_motion
 # Define a function to calculate the price at time t
-price_at_t <- function(n_paths, P0, Pa, Pb, mu, sigma, T) {
+price_at_t <- function(n_paths, P0, mu, sigma, T) {
 
     Bo = 0
     t = seq(0, T, by = 0.1)
