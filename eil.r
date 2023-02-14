@@ -160,7 +160,7 @@ compute_row_data <- function(
     sigma, 
     t, 
     results, 
-    full_sim = FALSE
+    full_sim = TRUE
 ) {
 
     predicted_prices <- results$pred
@@ -204,7 +204,8 @@ calc_chunk <- function(ranges_list, mu, sigma, t) {
     P <- S0
 
     ranges <- ranges_list
-    res <- price_at_t(n_sim, P, Pa, Pb, mu, sigma, t)
+    #res <- price_at_t(n_sim, P, Pa, Pb, mu, sigma, t)
+    res <- price_at_t_heston_drift(100, 1000, mu, sigma, t, 0.04, 1, 0.04, 0.2, -0.5, 0.2)
 
     for (i in 1:length(ranges_list)) {
 
