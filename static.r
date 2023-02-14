@@ -98,16 +98,17 @@ price_at_t_heston <- function(n_paths, P0, mu, sigma, T, v0, kappa, theta, sigma
 
     for (i in 1:n_paths) {
         for (j in 2:(n_steps + 1)) {
-        v <- volatility_simulations[i, j - 1]
-        dZv <- sigma * (theta - v) * dt + sigma_v * sqrt(v * dt) * dZ[i, j - 1]
-        v <- max(0, v + kappa * (theta - v) * dt + sigma_v * sqrt(v * dt) * dW1[i, j - 1] + dZv)
-        volatility_simulations[i, j] <- v
-        stock_price_simulations[i, j] <- stock_price_simulations[i, j - 1] * exp((mu - v / 2) * dt + sqrt(v * dt) * (rho * dW1[i, j - 1] + sqrt(1 - rho^2) * dW2[i, j - 1]))
+            v <- volatility_simulations[i, j - 1]
+            dZv <- sigma * (theta - v) * dt + sigma_v * sqrt(v * dt) * dZ[i, j - 1]
+            v <- max(0, v + kappa * (theta - v) * dt + sigma_v * sqrt(v * dt) * dW1[i, j - 1] + dZv)
+            volatility_simulations[i, j] <- v
+            stock_price_simulations[i, j] <- stock_price_simulations[i, j - 1] * exp((mu - v / 2) * dt + sqrt(v * dt) * (rho * dW1[i, j - 1] + sqrt(1 - rho^2) * dW2[i, j - 1]))
         }
     }
 
+    # print(glue::glue("nrow {nrow(stock_price_simulations)} ncol {ncol(stock_price_simulations)}"))
     matplot(stock_price_simulations, type = "l", col = "blue", lwd = 1, xlab = "Time", ylab = "Stock Price", main = "Stock Price Simulation")
-    return(list(gbms = stock_price_simulations, pred = NA, IL_v = volatility_simulations))
+    return(list(gbms = stock_price_simulations, pred = NA, volatility = volatility_simulations))
 }
 
 # Random number Box–Muller transform
