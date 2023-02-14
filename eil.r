@@ -159,37 +159,13 @@ compute_row_data <- function(
     mu, 
     sigma, 
     t, 
-    results, 
-    full_sim = TRUE
+    results
 ) {
 
-    predicted_prices <- results$pred
     simulated_prices <- results$gbms
-
-    data <- list(
-        a = 1014.68, 
-        b = 1022.98, 
-        c = 1114.04
-    )
-
-    datum <- 0
-    
     avg_last_price <- get_simulated_last_price_avg(simulated_prices)
-
-    if (full_sim) {
-        datum <- avg_last_price
-    } else {
-        if (sigma == 0.001 && mu == 0.000075 && t == 168) {
-            datum <- data$a
-        } else if (sigma == 0.002 && mu == 0.000075 && t == 168) {
-            datum <- data$b
-        } else if (sigma == 0.002 && mu == 0.00015 && t == 720) {
-            datum <- data$c
-        } else {
-            datum <- avg_last_price
-        }
-    } 
-
+    datum <- avg_last_price
+    
     time_ITM <- calc_time_ITM_integrals(P, Pa, Pb, mu, sigma, t)
     EIL <- calc_eil(P, Pa, Pb, mu, sigma, t)
     data <- calc_abs_il(P, datum, Pa, Pb)
