@@ -64,6 +64,7 @@ options(width = 60)
 path = getwd()
 source(paste(path, "/config.r", sep=""))
 source(paste(path, "/static.r", sep=""))
+source(paste(path, "/eil.r", sep=""))
 
 T = 168
 P = S0
