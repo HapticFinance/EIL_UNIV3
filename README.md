@@ -1,6 +1,9 @@
-# EIL research
+# IL research
 
-This is an implementation of the whitepaper "Concentrated Liquidity Analysis in Uniswap V3" [1] in the R language. The code implements the analytical computation of expected impermanent loss (EIL) for Uniswap V3 and other ideas presented in the paper. It will produce a pdf with the results of the simulation. 
+This code implements concepts introduced in recent research papers on Uniswap V3 such as : 
+
+  - Analytical computation of expected impermanent loss (EIL) [1]
+  - Analytical computation of impermanent loss per liquidity (UIL) and static replication with options [2]
 
 This work is part of the research conducted while designing the Haptic protocol.
 
@@ -24,3 +27,4 @@ The necessary dependencies will be installed and a pdf file will be generated in
 ## References
 
 - [1] Concentrated Liquidity Analysis in Uniswap V3 from DeFi'22: Proceedings of the 2022 ACM CCS Workshop on Decentralized Finance and Security November 2022, pages 63–70, available at https://doi.org/10.1145/3560832.3563438
+- [2] Static Replication of Impermanent Loss for Concentrated Liquidity Provision in Decentralised Markets, available at https://arxiv.org/abs/2109.07054
