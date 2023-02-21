@@ -80,16 +80,15 @@ df_uil_one <- run_uil_calc(ranges, sigma, T)
 
 \section{Introduction}
 
-Impermament loss (IL) or divergence-loss, is a phenomena experienced by LP providers on almost all types of AMM platforms, especially when providing liquidity for non-mean reverting assets. The effects of IL have been studied extensively because of their negative impact on LP providers' returns \cite{LOE} \cite{DZ}. When modelling an asset's price with a geometric brownian motion (GBM), IL can be estimated numerically by using iterative techniques such as the Monte Carlo method. The result of this estimation is referred to as "expected impermanent loss" (EIL). Previous work wrongly concluded that the computation of EIL for Uniswap v3 positions is analytically intractable, due to the complexity of the math expressions involving the GBM \cite{GSL}. However, a recent paper provided a framework for the analytical computation of EIL for Uniswap v3 positions \cite{CV3}. We implement the ideas presented in the paper and compare the results with the results obtained from the Monte Carlo simulation.
+Impermament loss (IL) or divergence-loss, is a phenomena experienced by LP providers on almost all types of AMM platforms, especially when providing liquidity for non-mean reverting assets. The effects of IL have been studied extensively because of their negative impact on LP providers' returns \cite{LOE}. When modelling an asset's price with a geometric brownian motion (GBM), IL can be estimated numerically by using iterative techniques such as the Monte Carlo method. The result of this estimation is referred to as "expected impermanent loss" (EIL). Previous work wrongly concluded that the computation of EIL for Uniswap v3 positions is analytically intractable, due to the complexity of the math expressions involving the GBM \cite{GSL}. However, a recent paper provided a framework for the analytical computation of EIL for Uniswap v3 positions \cite{CV3}. Subsequent work \cite{DZ} introduced the "unit impermanent loss per liquidity" (UIL) and static replication formulas. We implement these ideas and present the results obtained with Monte Carlo simulations. 
 
 \subsection{Simulation parameters}
 \label{simpar}
 
   - Number of simulations: `r n_sim` 
-  - Total time: `r T` (Hours)
-  - Initial price: `r S0` (Units of numéraire asset)
-  - Drift: `r mu`
-  - Standard deviation: `r sigma`
+  - Initial price: `r S0` (Units of numéraire asset, e.g. DAI or USDC)
+  - Drift ($\mu$): `r mu`
+  - Standard deviation ($\sigma$): `r sigma`
 
 \newpage
 
@@ -173,10 +172,10 @@ function(P, Pa, Pb, mu, sigma, T) {
 
 \newpage
 
-\section{Simulation results} 
+\section{Monte Carlo simulation results} 
 \label{simres}
 
-\subsection{168 hours (7 days)}
+\subsection{EIL for 168 hours (7 days)}
 
 ```{r, echo=FALSE, warning=FALSE, results='asis'}
 
@@ -201,7 +200,7 @@ kbl(booktabs = T,
     longtable = T, 
     escape = FALSE, 
     col.names = c( "$\\mu$", "r", "CE", "$\\Tau$", "EIL", "IL","$\\Tau$", "EIL", "IL"),
-    caption = "Table 1: Results for setting $\\mu$ = 7.5e−5, 1.5e−4 and $\\sigma$ = 0.001 and $\\sigma$ = 0.002 for 7 days (T = 168 hours) of providing liquidity with initial price \\$1000."
+    caption = "Table 1: Results for setting $\\mu$ = 7.5e−5, 1.5e−4 and $\\sigma$ = 0.001 and $\\sigma$ = 0.002 for 7 days (T = 168 hours) of providing liquidity with initial price \\$1000.\\label{tab:table1}"
     ) %>%  kable_styling(font_size = 9) %>%
     column_spec(1, bold=F) %>%
         collapse_rows(columns = 1, latex_hline = "major", valign = "middle")  %>%
@@ -212,7 +211,7 @@ kbl(booktabs = T,
 
 ```
 
-\subsection{7200 hours (30 days)}
+\subsection{EIL for 7200 hours (30 days)}
 
 ```{r, echo=FALSE, warning=FALSE, results='asis'}
 collapse_rows_dt <- data.frame(
@@ -236,7 +235,7 @@ kbl(booktabs = T,
     longtable = T,
     escape = FALSE, 
     col.names = c( "$\\mu$", "r", "CE", "$\\Tau$", "EIL", "IL","$\\Tau$", "EIL", "IL"),
-    caption = "Table 2: Results for setting $\\mu$ = 7.5e−5, 1.5e−4 and $\\sigma$ = 0.001 and $\\sigma$ = 0.002 for 30 days (T = 720 hours) of providing liquidity with initial price \\$1000."
+    caption = "Table 2: Results for setting $\\mu$ = 7.5e−5, 1.5e−4 and $\\sigma$ = 0.001 and $\\sigma$ = 0.002 for 30 days (T = 720 hours) of providing liquidity with initial price \\$1000.\\label{tab:table2}"
     ) %>%  kable_styling(font_size = 9) %>%
     column_spec(1, bold=F) %>%
         collapse_rows(columns = 1, latex_hline = "major", valign = "middle")  %>%
@@ -244,7 +243,11 @@ kbl(booktabs = T,
                 add_header_above(escape =FALSE, c(" ", " ", setNames(3,sigmaMsg), setNames(4,sigmaMsg2)))   %>%
                     kable_styling(font_size = 9, latex_options = c("hold_position", "repeat_header")) %>%
                         print()
+```
 
+\subsection{Expected prices}
+
+```{r, echo=FALSE, warning=FALSE, results='asis'}
 static_expected_prices <- get_expected_prices(P, mu)
 data <- static_expected_prices$data
 
@@ -254,17 +257,21 @@ df_expected_prices <-  setNames(df_expected_prices, c("$\\mu$", "$\\Tau$ = 168",
 row.names(df_expected_prices) <- NULL
 
 df_expected_prices %>%
-kbl( escape = F, caption = paste("Table 3: Expected price of the asset, for 7 ($\\Tau$ = 168 hours) and 30 days ($\\Tau$ = 720 hours)."), booktabs = T) %>%
+kbl( escape = F, caption = paste("Table 3: Expected price of the asset, for 7 ($\\Tau$ = 168 hours) and 30 days ($\\Tau$ = 720 hours).\\label{tab:table3}"), booktabs = T) %>%
     kable_styling(latex_options = "HOLD_position", position="left") %>%
     kable_classic(full_width = F, html_font = "Cambria") %>%
       print()
+```
 
+\subsection{Unit impermanent loss per liquidity (UIL)}
+
+```{r, echo=FALSE, warning=FALSE, results='asis'}
 df_uil_one %>%
     kbl(booktabs = T, 
         align = "l", 
         longtable = T,
         escape = FALSE, 
-        caption = "Table 3 - Unit impermanent loss per liquidity (UIL)"
+        caption = "Table 4 - Unit impermanent loss per liquidity (UIL).\\label{tab:table4}"
     ) %>%  
     kable_styling(font_size = 9)  %>%
        collapse_rows(columns = c(1), latex_hline = "major", valign = "middle")  %>%
@@ -274,7 +281,7 @@ df_uil_one %>%
 \section{Conclusion}
 \label{conclusion}
 
-\lipsum[3-10]
+The method introduced by \cite{CV3} provides a reliable way to determine the expected value of impermanent loss under a geometric brownian motion assumption. The model is sensitive to parameters such as drift and volatility as see in Table \ref{tab:table1} and \ref{tab:table2}. The expected value of impermanent loss computed analytically converges with the result of the Monte Carlo simulation with low error rate. \cite{DZ} characterizes analytically the option-like payoff structure of impermanent loss for concentrated liquidity positions and provides formulas for static replication of the impermanent loss with a combination of European options. Table \ref{tab:table4} reports the result of the computation obtained with the analytical approach and highlights the high accuracy of the replication formulas. 
 
 \newpage
 
