@@ -267,8 +267,9 @@ kbl( escape = F, caption = paste("Table 3: Expected price of the asset, for 7 ($
 
 ```{r, echo=FALSE, warning=FALSE, results='asis'}
 df_uil_one %>%
-    kbl(booktabs = T, 
-        align = "l", 
+    kbl(
+        booktabs = T, 
+        align = "c", 
         longtable = T,
         escape = FALSE, 
         caption = "Table 4 - Unit impermanent loss per liquidity (UIL).\\label{tab:table4}"
@@ -276,7 +277,9 @@ df_uil_one %>%
     kable_styling(font_size = 9)  %>%
        collapse_rows(columns = c(1), latex_hline = "major", valign = "middle")  %>%
             add_header_above(escape = FALSE, c(" ", "Formula " = 2, "Static replication " = 2))  %>%
-                print()
+                kable_styling(latex_options = "HOLD_position", position="left") %>%
+                    kable_classic(full_width = F, html_font = "Cambria") %>%
+                        print()
 ```
 \section{Conclusion}
 \label{conclusion}
