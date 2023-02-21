@@ -174,15 +174,14 @@ compute_row_data <- function(
     return(list(EIL, time_ITM, IL)) 
 }
 
-calc_chunk <- function(ranges_list, mu, sigma, t) {
+calc_chunk <- function(mu, sigma, t) {
 
     mat_res <- matrix(ncol = length(ranges), nrow = length(ranges)) 
     P <- S0
 
-    ranges <- ranges_list
-    res <- price_at_t_heston(n_sim, 1000, mu, sigma, t, v0, kappa, theta, sigma_v, rho)
-
-    for (i in 1:length(ranges_list)) {
+    res <- price_at_t_heston(n_sim, P, mu, sigma, t, v0, kappa, theta, sigma_v, rho)
+     
+    for (i in 1:length(ranges)) {
 
         active_range <- ranges[[i]]
         
@@ -213,13 +212,13 @@ run_calc <- function(mu, sigma, t) {
 
     tryCatch({
         
-        first_chunk <- calc_chunk(ranges, mu, sigma, t)
-        second_chunk <- calc_chunk(ranges, mu, sigma * 2, t)
+        first_chunk <- calc_chunk( mu, sigma, t)
+        second_chunk <- calc_chunk( mu, sigma * 2, t)
 
         combined_by_col_1st_chunk <- cbind(first_chunk, second_chunk[, 4:ncol(second_chunk)])
 
-        third_chunk <- calc_chunk(ranges, mu * 2, sigma, t)
-        fourth_chunk <- calc_chunk(ranges, mu * 2, sigma * 2, t)
+        third_chunk <- calc_chunk(mu * 2, sigma, t)
+        fourth_chunk <- calc_chunk(mu * 2, sigma * 2, t)
 
         combined_by_col_2nd_chunk <- cbind(third_chunk, fourth_chunk[, 4:ncol(fourth_chunk)])
         combined <- rbind(combined_by_col_1st_chunk, combined_by_col_2nd_chunk)
