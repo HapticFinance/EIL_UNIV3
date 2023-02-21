@@ -63,6 +63,8 @@ options(width = 60)
 
 path = getwd()
 source(paste(path, "/config.r", sep=""))
+source(paste(path, "/uil.r", sep=""))
+
 source(paste(path, "/eil.r", sep=""))
 source(paste(path, "/static.r", sep=""))
 
@@ -71,6 +73,7 @@ P = S0
 
 chunk_one <- run_calc(mu, sigma, T) 
 chunk_two <- run_calc(mu, sigma,  T * 2) 
+df_uil_one <- run_uil_calc(ranges, sigma, T)
 
 ```
 \newpage
@@ -256,6 +259,17 @@ kbl( escape = F, caption = paste("Table 3: Expected price of the asset, for 7 ($
     kable_classic(full_width = F, html_font = "Cambria") %>%
       print()
 
+df_uil_one %>%
+    kbl(booktabs = T, 
+        align = "l", 
+        longtable = T,
+        escape = FALSE, 
+        caption = "Table 3 - Unit impermanent loss per liquidity (UIL)"
+    ) %>%  
+    kable_styling(font_size = 9)  %>%
+       collapse_rows(columns = c(1), latex_hline = "major", valign = "middle")  %>%
+            add_header_above(escape = FALSE, c(" ", "Formula " = 2, "Static replication " = 2))  %>%
+                print()
 ```
 \section{Conclusion}
 \label{conclusion}

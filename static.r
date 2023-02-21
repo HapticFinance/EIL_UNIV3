@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 path = getwd()
 source(paste(path, "/install.r", sep=""))
-set.seed(2)
+# set.seed(2)
 
 calc_abs_il <- function(P, P1, Pa, Pb) {
 
@@ -45,6 +45,24 @@ get_expected_prices <- function(P0, mu) {
     return(list(data = static_data))
 }
 
+bs_option <- function(S0, K, sigma, r, T, flag) {
+  
+  # Calculate the option value using the Black-Scholes formula
+  d1 <- (log(S0/K) + (r + sigma^2/2) * T) / (sigma * sqrt(T))
+  d2 <- d1 - sigma * sqrt(T)
+  
+  if (flag == "Call") {
+    option_value <- S0 * pnorm(d1) - K * exp(-r * T) * pnorm(d2)
+  } else if (flag == "Put") {
+    option_value <- K * exp(-r * T) * pnorm(-d2) - S0 * pnorm(-d1)
+  } else {
+    stop("Invalid flag parameter. Must be 'Call' or 'Put'.")
+  }
+  
+  # Return the option value
+  return(option_value)
+}
+
 # Adapted from https://github.com/Victorletzelter/brownian_motion
 # Define a function to calculate the price at time t
 price_at_t <- function(n_paths, P0, mu, sigma, T) {
@@ -75,41 +93,47 @@ price_at_t <- function(n_paths, P0, mu, sigma, T) {
 
 # Define a function to simulate stock prices using the Heston model with a drift term for the volatility process
 price_at_t_heston <- function(n_paths, P0, mu, sigma, T, v0, kappa, theta, sigma_v, rho) {
-
-    # Set up the time grid
-    dt <- 0.1
-    n_steps <- round(T / dt)
-    t <- seq(0, T, by = dt)
-
-    # Simulate the Brownian motion components
-    dW1 <- matrix(rnorm(n_paths * n_steps), nrow = n_paths, ncol = n_steps)
-    dW2 <- matrix(rnorm(n_paths * n_steps), nrow = n_paths, ncol = n_steps)
-    dZ <- matrix(rnorm(n_paths * n_steps), nrow = n_paths, ncol = n_steps)
-    W1 <- apply(dW1, 1, cumsum)
-    W2 <- apply(dW2, 1, cumsum)
-
-    # Simulate the stock price paths
-    stock_price_simulations <- matrix(0, nrow = n_paths, ncol = n_steps + 1)
-    stock_price_simulations[, 1] <- P0
-
-    # Simulate the volatility paths
-    volatility_simulations <- matrix(0, nrow = n_paths, ncol = n_steps + 1)
-    volatility_simulations[, 1] <- v0
-
-    for (i in 1:n_paths) {
-        for (j in 2:(n_steps + 1)) {
-            v <- volatility_simulations[i, j - 1]
-            dZv <- sigma * (theta - v) * dt + sigma_v * sqrt(v * dt) * dZ[i, j - 1]
-            v <- max(0, v + kappa * (theta - v) * dt + sigma_v * sqrt(v * dt) * dW1[i, j - 1] + dZv)
-            volatility_simulations[i, j] <- v
-            stock_price_simulations[i, j] <- stock_price_simulations[i, j - 1] * exp((mu - v / 2) * dt + sqrt(v * dt) * (rho * dW1[i, j - 1] + sqrt(1 - rho^2) * dW2[i, j - 1]))
-        }
+  
+  dt <- 0.1
+  t = seq(0, T, by = dt)
+  
+  dW1 <- matrix(rnorm(n_paths * length(t)), nrow = n_paths, ncol = length(t))
+  dW2 <- matrix(rnorm(n_paths * length(t)), nrow = n_paths, ncol = length(t))
+  dZ <- matrix(rnorm(n_paths * length(t)), nrow = n_paths, ncol = length(t))
+  
+  W1 <- apply(dW1, 1, cumsum)
+  W2 <- apply(dW2, 1, cumsum)
+  
+  # Simulate the stock price paths
+  stock_price_simulations <- matrix(0, nrow = n_paths, ncol = length(t) + 1)
+  stock_price_simulations[, 1] <- P0
+  
+  # Simulate the volatility paths
+  volatility_simulations <- matrix(0, nrow = n_paths, ncol = length(t) + 1)
+  volatility_simulations[, 1] <- v0
+  
+  pred <- numeric(length(t))
+  
+  for (i in 1:n_paths) {
+    for (j in 2:(length(t) + 1)) {
+      v <- volatility_simulations[i, j - 1]
+      dZv <- sigma * (theta - v) * dt + sigma_v * sqrt(v * dt) * dZ[i, j - 1]
+      v <- max(0, v + kappa * (theta - v) * dt + sigma_v * sqrt(v * dt) * dW1[i, j - 1] + dZv)
+      volatility_simulations[i, j] <- v
+      stock_price_simulations[i, j] <- stock_price_simulations[i, j - 1] * exp((mu - v / 2) * dt + sqrt(v * dt) * (rho * dW1[i, j - 1] + sqrt(1 - rho^2) * dW2[i, j - 1]))
+      
+      # Expected price
+      pred[j - 1] <- P0 * exp(mu * t[j - 1])
     }
-
-    # print(glue::glue("nrow {nrow(stock_price_simulations)} ncol {ncol(stock_price_simulations)}"))
-    matplot(stock_price_simulations, type = "l", col = "blue", lwd = 1, xlab = "Time", ylab = "Stock Price", main = "Stock Price Simulation")
-    return(list(gbms = stock_price_simulations, pred = NA, volatility = volatility_simulations))
+  }
+  
+  return(list(gbms = stock_price_simulations, pred = pred ))
 }
+
+
+# result <- price_at_t_heston(n_paths = 10, P0 = 1000, mu = 0.1, sigma = 0.2, T = 1, v0 = 0.04, kappa = 1.5, theta = 0.04, sigma_v = 0.3, rho = -0.5)
+
+# tail(result$gbms[, ncol(result$gbms)])
 
 # Random number Box–Muller transform
 random_bm <- function(mu, sigma) {
