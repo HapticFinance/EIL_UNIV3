@@ -86,10 +86,8 @@ Impermament loss (IL) or divergence-loss, is a phenomena experienced by LP provi
 \label{simpar}
 
   - Number of simulations: `r n_sim` 
-  - Initial price: `r S0` (Units of numéraire asset, e.g. DAI or USDC)
-  - Drift ($\mu$): `r mu`
-  - Standard deviation ($\sigma$): `r sigma`
-
+  - Initial price: $`r S0` 
+  
 \newpage
 
 \section{Technical details}
