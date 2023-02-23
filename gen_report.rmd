@@ -78,28 +78,28 @@ df_uil_one <- run_uil_calc(ranges, sigma, T)
 ```
 \newpage
 
-\section{Introduction}
+\section{Synopsis}
 
-Impermament loss (IL) or divergence-loss, is a phenomena experienced by LP providers on almost all types of AMM platforms, especially when providing liquidity for non-mean reverting assets. The effects of IL have been studied extensively because of their negative impact on LP providers' returns \cite{LOE}. When modelling an asset's price with a geometric brownian motion (GBM), IL can be estimated numerically by using iterative techniques such as the Monte Carlo method. The result of this estimation is referred to as "expected impermanent loss" (EIL). A fellow scholar wrongly concluded that the computation of EIL for Uniswap v3 positions is analytically intractable, due to the complexity of the math expressions involving the GBM \cite{GSL}. However, a recent paper provided a framework for the analytical computation of EIL for Uniswap v3 positions \cite{CV3}. Previous work \cite{DZ} introduced the "unit impermanent loss per liquidity" (UIL) and static replication formulas. We implement these ideas and present the results obtained with Monte Carlo simulations. 
+Impermament loss (IL) or divergence-loss, is a phenomena experienced by LP providers on almost all types of AMM platforms, especially when providing liquidity for non-mean reverting assets. The effects of IL have been studied extensively because of their negative impact on LP providers' returns \cite{LOE}. When modelling an asset's price with a geometric brownian motion (GBM) the expected value of IL (EIL) can be estimated numerically by using techniques such as the Monte Carlo method. To our knowledge, at least one previous fellow scholar deemed  the computation of EIL for Uniswap v3 positions analytically intractable due to the complexity of the math expressions involving the GBM \cite{GSL}, however, a recent paper provided a framework for the analytical computation of EIL for Uniswap v3 positions \cite{CV3}. Previous work \cite{DZ} introduced the "unit impermanent loss per liquidity" (UIL) and efficient static replication formulas. We implement these ideas and present the results obtained with Monte Carlo simulations. 
 
 \subsection{Simulation parameters}
 \label{simpar}
 
   - Number of simulations: `r n_sim` 
   - Initial price: $`r S0` 
-  
+
 \newpage
 
-\section{Technical details}
+\section{Implementation details}
 
-\subsection{Expected IL}
+\subsection{EIL}
 \label{eilint}
 
-The integrals in the analytical computation of EIL are calculated using the "_integrate_" R function, which is based on QUADPACK routines dqags and dqagi by R. Piessens and E. deDoncker–Kapenga \cite{PIE}.
+The integrals in the analytical computation of EIL and UIL are calculated using the "_integrate_" R function, based on QUADPACK routines dqags and dqagi by R. Piessens et al. \cite{PIE}. The code shown is simplified for displaying purposes. Checkout the Github repository for the full version.
 
 ```{r a, eval=FALSE}
 
-function(f, lb, ub, P, Pa, Pb, mu, sigma, T) {
+EIL <- function(f, lb, ub, P, Pa, Pb, mu, sigma, T) {
 
     integral <- integrate(
         f,
@@ -122,19 +122,52 @@ function(f, lb, ub, P, Pa, Pb, mu, sigma, T) {
     coefficient <- (1 / (sigma * sqrt(2 * pi * T)))
     return(coefficient * integral)
 }
+```
+
+\newpage
+
+\subsection{UIL}
+\label{uilint}
+
+```{r x, eval=FALSE}
+UIL <- function(P0, Pa, Pb, sigma, t, flag) {
+    
+    psi <- function(x, T, sigma, flag) {
+        option_price <- bs_option(P0, x, sigma, 0, T, flag) 
+        return(x^(-(3/2)) * option_price)
+    }
+
+    integral <- integrate(
+        psi,
+        # Lower integration bound
+        lower = Pa, 
+        # Upper integration bound
+        upper = Pb, 
+        subdivisions = 5000,
+        abs.tol = 1e-5, 
+        rel.tol = 1e-7,  
+        stop.on.error = F,
+        T = t ,
+        sigma = sigma,
+        flag = flag
+    )$value;
+
+    coefficient <- (-0.5)
+    return(coefficient * integral)
+}
 
 ```
 
 \newpage
 
-\subsection{Time in-the-money}
+\subsection{Time in-the-money (TITM)}
 \label{itimint}
 
  The two-dimensional integrals for the computation of "_time in-the-money_" ($\Tau$) are calculated using the dblquad function from the pracma library. 
 
 ```{r b, eval=FALSE}
 
-function(P, Pa, Pb, mu, sigma, T) {
+TITM <- function(P, Pa, Pb, mu, sigma, T) {
 
     lower_bound <- log(Pa / P)
     upper_bound <- log(Pb / P)
@@ -164,10 +197,8 @@ function(P, Pa, Pb, mu, sigma, T) {
     
     return(result)
 }
-
-
 ```
-
+ 
 \newpage
 
 \section{Monte Carlo simulation results} 
@@ -272,7 +303,7 @@ df_uil_one %>%
         align = "c", 
         longtable = T,
         escape = FALSE, 
-        caption = "Table 4 - Unit impermanent loss per liquidity (UIL).\\label{tab:table4}"
+        caption = "Table 4 - Unit IL per liquidity (UIL).\\label{tab:table4} for $\\sigma$ = 0.001 and $\\sigma$ = 0.005"
     ) %>%  
     kable_styling(font_size = 9)  %>%
     collapse_rows(columns = c(1), latex_hline = "major", valign = "middle")  %>%
@@ -281,10 +312,10 @@ df_uil_one %>%
         kable_classic(full_width = F, html_font = "Cambria") %>%
             print()
 ```
-\section{Conclusion}
-\label{conclusion}
+\section{Remarks}
+\label{remarks}
 
-The method introduced by \cite{CV3} provides a reliable way to determine the expected value of impermanent loss under a geometric brownian motion assumption. The model is sensitive to parameters such as drift and volatility as seen in Table \ref{tab:table1} and \ref{tab:table2}. The expected value of impermanent loss computed analytically converges with the result of the Monte Carlo simulation with low error rate. \cite{DZ} characterizes analytically the option-like payoff structure of impermanent loss for concentrated liquidity positions and provides formulas for static replication of the impermanent loss with a combination of European options. Table \ref{tab:table4} reports the result of the computation obtained with the analytical approach and highlights the high accuracy of the replication formulas. 
+The method introduced by \cite{CV3} provides a reliable way to determine the expected value of impermanent loss under a geometric brownian motion assumption. The model is sensitive to parameters such as drift and volatility as seen in Table \ref{tab:table1} and \ref{tab:table2}. The expected value of impermanent loss computed analytically converges with the result of the Monte Carlo simulation with low error rate. \cite{DZ} characterizes analytically the option-like payoff structure of impermanent loss for concentrated liquidity positions and provides formulas for static replication of the impermanent loss with a combination of European options. Table \ref{tab:table4} reports the result of the computation obtained using the analytical approach and highlights the high accuracy of the replication formulas. 
 
 \newpage
 
