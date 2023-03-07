@@ -1,4 +1,4 @@
-# IL research
+# EIL Uniswap V3
 
 This code implements concepts introduced in recent research papers on Uniswap V3 such as : 
 
