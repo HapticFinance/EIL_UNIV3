@@ -95,7 +95,7 @@ Impermament loss (IL) or divergence-loss, is a phenomena experienced by LP provi
 \subsection{EIL}
 \label{eilint}
 
-The integrals in the analytical computation of EIL and UIL are calculated using the "_integrate_" R function, based on QUADPACK routines dqags and dqagi by R. Piessens et al. \cite{PIE}. The code shown is simplified for displaying purposes. Checkout the Github repository for the full version.
+The integrals in the analytical computation of EIL and UIL are calculated using the "_integrate_" R function, based on QUADPACK routines dqags and dqagi by R. Piessens et al. \cite{PIE}. The code shown below is simplified for displaying purposes. Checkout the Github repository for the full version.
 
 ```{r a, eval=FALSE}
 

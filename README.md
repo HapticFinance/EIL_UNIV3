@@ -3,7 +3,7 @@
 This code implements concepts introduced in recent research papers on Uniswap V3 such as : 
 
   - Analytical computation of expected impermanent loss (EIL) [1]
-  - Analytical computation of impermanent loss per liquidity (UIL) and static replication with options [2]
+  - Analytical computation of unit impermanent loss per liquidity (UIL) and static replication with options [2]
 
 This work is part of the research conducted while designing the Haptic protocol and is made available for educational purposes.
 
