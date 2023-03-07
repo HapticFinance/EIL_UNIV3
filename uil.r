@@ -150,7 +150,7 @@ run_uil_calc <- function(ranges, sigma, t) {
     res <- rbind(first_chunk, second_chunk)
 
     df <- data.frame(res)
-    colnames(df) <- c("sigma", "$UIL^{R}$", "$UIL^{L}$", "$UIL^{R}$", "$UIL^{L}$")
+    colnames(df) <- c("$\\sigma$", "$UIL^{R}$", "$UIL^{L}$", "$UIL^{R}$", "$UIL^{L}$")
 
     return(df)
 }
