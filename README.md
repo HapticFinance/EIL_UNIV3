@@ -27,4 +27,4 @@ The necessary dependencies will be installed and a pdf file will be generated in
 ## References
 
 - [1] Concentrated Liquidity Analysis in Uniswap V3 from DeFi'22: Proceedings of the 2022 ACM CCS Workshop on Decentralized Finance and Security November 2022, pages 63–70, available at https://doi.org/10.1145/3560832.3563438
-- [2] Static Replication of Impermanent Loss for Concentrated Liquidity Provision in Decentralised Markets, available at https://arxiv.org/abs/2109.07054
+- [2] Static Replication of Impermanent Loss for Concentrated Liquidity Provision in Decentralised Markets, available at https://arxiv.org/abs/2205.12043
